@@ -410,6 +410,26 @@ void show_top_bar(win_t *win)
 	//XftDrawDestroy(d);
 }
 
+void draw_tags(win_t *win, char* napisz)
+{
+	win_env_t *e;
+	e = &win->env;
+	//static GC gc;
+	XftDraw *d;
+	int w;
+	w = win->w - 2*H_TEXT_PAD;
+	fprintf(stderr,"mojafunkcja draw_tags w window.c:421");
+	XSetForeground(e->dpy, gc, win->fg.pixel);
+	XFillRectangle(win->env.dpy, win->buf.pm, gc, 0, 0, win->w, 25);
+
+	XSetForeground(e->dpy, gc, win->red.pixel);
+	XSetForeground(e->dpy, gc, win->red.pixel);
+	//char* napis = "tu beda tagi";
+	w -= 2 * H_TEXT_PAD; /* gap between left and right parts */
+	d = XftDrawCreate(e->dpy, win->buf.pm, DefaultVisual(e->dpy, e->scr), DefaultColormap(e->dpy, e->scr));
+	win_draw_text(win, d, &win->red, 190, 200, napisz, strlen(napisz), w);
+}
+
 void win_draw_bar(win_t *win)
 {
 	int len, x, y, w, tw;
@@ -443,7 +463,7 @@ void win_draw_bar(win_t *win)
 		x = H_TEXT_PAD;
 		w -= 2 * H_TEXT_PAD; /* gap between left and right parts */
 		win_draw_text(win, d, &win->bg, x, y, l->buf, len, w);
-		char* napis = "nowy napis:window.c:441";
+		char* napis = "nowy napis:window.c:466";
 		win_draw_text(win, d, &win->red, 300, 300, napis, strlen(napis), w);
 	}
 	XftDrawDestroy(d);

@@ -101,6 +101,10 @@ static const keymap_t keys[] = {
 	{ 0,            XK_Right,         t_move_sel,           DIR_RIGHT },
 	{ 0,            XK_R,             t_reload_all,         None },
 
+	{ 0,            XK_Next,          i_navigate,           +1 },
+	{ 0,            XK_Right,         i_navigate,           +1 },
+	{ 0,            XK_Left,          i_navigate,           -1 },
+	{ 0,            XK_Prior,         i_navigate,           -1 },
 	{ 0,            XK_N,             i_navigate,           +1 },
 	{ 0,            XK_n,             i_scroll_to_edge,     DIR_LEFT | DIR_UP },
 	{ 0,            XK_space,         i_navigate,           +1 },

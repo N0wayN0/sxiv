@@ -47,6 +47,7 @@ void animate(void);
 void slideshow(void);
 void clear_resize(void);
 void show_top_bar(); // dodalem bo ta funkcje uzywam tutaj a ona jest w window.c
+void draw_tags(); // dodalem bo ta funkcje uzywam tutaj a ona jest w window.c
 appmode_t mode;
 arl_t arl;
 img_t img;
@@ -309,22 +310,22 @@ close_info();
 	}
 		fprintf(stderr,"continue\n");
 	win.bar.l.buf[0] = '\0';
-		fprintf(stderr, "test  pfd[0] (before) %d\n",pfd[0]); 
-		fprintf(stderr, "test  pfd[1] (before) %d\n",pfd[1]); 
-		fprintf(stderr, "test  pfd[2] (before) %d\n",pfd[2]); 
+		//fprintf(stderr, "test  pfd[0] (before) %d\n",pfd[0]); 
+		//fprintf(stderr, "test  pfd[1] (before) %d\n",pfd[1]); 
+		//fprintf(stderr, "test  pfd[2] (before) %d\n",pfd[2]); 
 	if (pipe(pfd) < 0) {
-		fprintf(stderr,"ipipe error cos jest xle koniec\n");
+		//fprintf(stderr,"ipipe error cos jest xle koniec\n");
 		return;
 	}
-	fprintf(stderr, "test  pfd[0] (after) %d\n",pfd[0]); 
-	fprintf(stderr, "test  pfd[1] (after) %d\n",pfd[1]); 
-	fprintf(stderr, "test  pfd[2] (after) %d\n",pfd[2]); 
+	//fprintf(stderr, "test  pfd[0] (after) %d\n",pfd[0]); 
+	//fprintf(stderr, "test  pfd[1] (after) %d\n",pfd[1]); 
+	//fprintf(stderr, "test  pfd[2] (after) %d\n",pfd[2]); 
 	if ((info.pid = fork()) == 0) {
 		close(pfd[0]);
 		dup2(pfd[1], 1);
 		//close(pfd[1]);
 		fprintf(stderr,"exec forked cmd -->%s\n",cmd);
-		execl(cmd, cmd, files[fileidx].name, NULL);
+		execl(cmd, cmd, files[fileidx].path, NULL);
 		error(EXIT_FAILURE, errno, "exec: %s", cmd);
 	}
 	close(pfd[1]);
@@ -344,15 +345,16 @@ close_info();
 
 	while (true) {
 		n = read(info.fd, buf, sizeof(buf));
-		fprintf(stderr,"moj readed  %d bytes from info.fd -> %d\n",n, info.fd);
-		fprintf(stderr,"moj %s\n",buf);
+        fprintf(stderr,"N=%d\n",n);
+		fprintf(stderr,"moj readed  %d bytes from info.fd -> %d\n", n, info.fd);
+		//fprintf(stderr,"moj %s\n",buf);
 		if (n < 0 && errno == EAGAIN) {
 			fprintf(stderr,"koniec. N<0\n");
 			return;
 		}
 		else if (n == 0)
 			goto end;
-		fprintf(stderr,"moj wykonuke --> %d\n",n);
+		//fprintf(stderr,"moj wykonuke --> %d\n",n);
 		for (i = 0; i < n; i++) {
 			//fprintf(stderr,"test buf[%d]  -> %d\n",i, buf[i]);
 			if (buf[i] == '\n') {
@@ -373,7 +375,9 @@ end:
 	//info.i -= info.lastsep;
 	//win_bar_l_buf[info.i] = '\0';
 	//fprintf(stderr,"odczytal: %s\n",win_bar_l_buf);  // tu jest to co cmd przekazal   image-info
+	fprintf(stderr,"odczytal: %s\n",buf);  // tu jest to co cmd przekazal   image-info
 		//win_draw_text(win, d, &win->red, 300, 300, buf, strlen(buf), w);
+    draw_tags(&win, buf);  // wyswietla to co zostalo pobrane z odmalonek komendy
 	win_draw(&win);
 	//info.fd = -1;
 	//close_info();
@@ -389,20 +393,20 @@ void open_info(void)
 	if (info.f.err != 0 || info.fd >= 0 || win.bar.h == 0)
 		return;
 	win.bar.l.buf[0] = '\0';
-		fprintf(stderr, "OOOooo  pfd[0] (before) %d\n",pfd[0]); 
-		fprintf(stderr, "OOOooo  pfd[1] (before) %d\n",pfd[1]); 
-		fprintf(stderr, "OOOooo  pfd[2] (before) %d\n",pfd[2]); 
+		//fprintf(stderr, "OOOooo  pfd[0] (before) %d\n",pfd[0]); 
+		//fprintf(stderr, "OOOooo  pfd[1] (before) %d\n",pfd[1]); 
+		//fprintf(stderr, "OOOooo  pfd[2] (before) %d\n",pfd[2]); 
 	if (pipe(pfd) < 0)
 		return;
-	fprintf(stderr, "OOOooo  pfd[0] (after) %d\n",pfd[0]); 
-	fprintf(stderr, "OOOooo  pfd[1] (after) %d\n",pfd[1]); 
-	fprintf(stderr, "OOOooo  pfd[2] (after) %d\n",pfd[2]); 
+	//fprintf(stderr, "OOOooo  pfd[0] (after) %d\n",pfd[0]); 
+	//fprintf(stderr, "OOOooo  pfd[1] (after) %d\n",pfd[1]); 
+	//fprintf(stderr, "OOOooo  pfd[2] (after) %d\n",pfd[2]); 
 	if ((info.pid = fork()) == 0) {
 		close(pfd[0]);
 		dup2(pfd[1], 1);
 		snprintf(w, sizeof(w), "%d", img.w);
 		snprintf(h, sizeof(h), "%d", img.h);
-		fprintf(stderr," OOOoo run cmd\n");
+		//fprintf(stderr," OOOoo run cmd\n");
 		execl(info.f.cmd, info.f.cmd, files[fileidx].name, w, h, NULL);
 		error(EXIT_FAILURE, errno, "exec: %s", info.f.cmd);
 	}
@@ -411,7 +415,7 @@ void open_info(void)
 		//fprintf(stderr," closed forked\n");
 		close(pfd[0]);
 	} else {
-		fprintf(stderr," OOOoo parent finish\n");
+		//fprintf(stderr," OOOoo parent finish\n");
 		fcntl(pfd[0], F_SETFL, O_NONBLOCK);
 		info.fd = pfd[0];
 		//fprintf(stderr,"tutaj %s\n",info.f.cmd);
@@ -429,14 +433,14 @@ void read_info(void)
 		//fprintf(stderr,"OOooo info.fd  %d\n",info.fd);
 	while (true) {
 		n = read(info.fd, buf, sizeof(buf));
-		fprintf(stderr,"OOOooo readed  %d from info.fd -> %d\n",n, info.fd);
-		fprintf(stderr,"OOOooo  %s\n",buf);
+		//fprintf(stderr,"OOOooo readed  %d from info.fd -> %d\n",n, info.fd);
+		//fprintf(stderr,"OOOooo  %s\n",buf);
 		if (n < 0 && errno == EAGAIN)
 			return;
 		else if (n == 0)
 			goto end;
 		for (i = 0; i < n; i++) {
-		fprintf(stderr,"OOOooo buf[%d]  -> %d\n",i, buf[i]);
+		//fprintf(stderr,"OOOooo buf[%d]  -> %d\n",i, buf[i]);
 			if (buf[i] == '\n') {
 				if (info.lastsep == 0) {
 					win.bar.l.buf[info.i++] = ' ';
