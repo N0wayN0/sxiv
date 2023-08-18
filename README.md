@@ -22,11 +22,11 @@
 
 <kbd>t</kbd> - edit tags
 
-<kbd>o</kbd> - open new sxiv and load all file from dir wheere current file lives
-
 <kbd>Ctrl</kbd>+<kbd>ENTER</kbd> - edit and save tags
 
 <kbd>Shift</kbd>+<kbd>S</kbd> - open terminal where current file lives
+
+<kbd>o</kbd> - open new sxiv and load all file from dir where current file lives
 
 <kbd>Ctrl</kbd>+<kbd>PgUp</kbd> - fit screen
 
@@ -34,6 +34,15 @@
 
 Navigate:
 
-<kbd>LEFT</kbd>or<kbd>PgUp</kbd>or<kbd>Bakspace</kbd> or mouse wheel up - previous
+Next
+<kbd>RIGHT</kbd>
+<kbd>PgDn</kbd>
+<kbd>SPACE</kbd>
+<kbd>mouse wheel down</kbd>
 
-<kbd>RIGHT</kbd>or<kbd>PgDn</kbd>or<kbd>SPACE</kbd> or mouse wheel down - next
+Previous
+<kbd>LEFT</kbd>
+<kbd>PgUp</kbd>
+<kbd>Bakspace</kbd>
+<kbd>mouse wheel up</kbd>
+
