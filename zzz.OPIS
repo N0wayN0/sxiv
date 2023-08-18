@@ -1,0 +1,24 @@
+stworzylem funkcje draw)tags w window.c i teraz musze przekazac tam tagi
+z pliku main.c musze ja odpalic
+
+
+ZEBY DODAC NOWA FUNKCJE
+1. dodac w config.def.h
+2. dodac w commands.lst
+3. dodac w commands.c
+
+Nie moge w pliku config.def.h jako parametru wstawic stringa wszystkie funkcje sa takie same i musi byc int
+ale w commands.c moge zrobic case i przekazywac dalej string
+
+moze uda sie tak: stwozyc plik na wzow config.h nazwac go komendy.h
+i stworzyc w nim zmienne wskazyjace na pliki wykonywalna np:
+char EDIT_TAGS = "/bin/edit-tags.sh"
+i w pliku commands.c w miejscu case zamiast tego
+run_ext_command("/root/.config/sxiv/exec/del-file.sh");
+bedzie
+run_ext_command(DEL-FILE); z jednego pliku zazadzac wszystkimi plikami exec
+OK
+
+nie moge odpalicz read_tags() zaraz po load_image() bo sie wiesza ale jest w mouse_track() i dziala
+musze tylko polepszyc wyswietlaanie tagow
+

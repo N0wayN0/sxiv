@@ -1,0 +1,21 @@
+#!/bin/sh
+
+# Called by sxiv(1) whenever an image gets loaded,
+# with the name of the image file as its first argument.
+# The output is displayed in sxiv's status bar.
+# $1 - filepath
+# $2 $3 - resolution
+
+s=" | " # field separator
+
+filename=$(basename "$1")
+filesize=$(du -Hh "$1" | cut -f 1)
+
+
+#allinfo=$(mediainfo $1 --output=JSON | jq ".media.track[1]")
+#width=$(echo $allinfo | jq ".Width")
+#height=$(echo $allinfo | jq ".Height")
+
+
+#echo "${width}x${height} ${filesize} ${filename}"
+echo "${2}x${3} ${filesize} ${filename}"
