@@ -10,9 +10,7 @@
 
 <kbd>Ctrl</kbd>+<kbd>LEFT</kbd>/<kbd>RIGHT</kbd> - move selected thumb in the list
 
-<kbd>></kbd> - navigate marked
-
-<kbd><</kbd> - navigate marked
+<kbd><</kbd>/<kbd>></kbd> - navigate marked
 
 <kbd>Home</kbd> - go to first
 
