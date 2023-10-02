@@ -203,12 +203,13 @@ bool cg_quit(arg_t _)
 {
 	unsigned int i;
 
-	if (options->to_stdout && markcnt > 0) {
+	//if (options->to_stdout && markcnt > 0) {
+	if (markcnt > 0) {
 		for (i = 0; i < filecnt; i++) {
 			if (files[i].flags & FF_MARK)
-				printf("%s\n", files[i].name);
+				printf("%s\n", files[i].path);
 		}
-	}
+	} else printf("%s\n", files[fileidx].path);
 	exit(EXIT_SUCCESS);
 }
 

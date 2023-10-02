@@ -331,6 +331,7 @@ close_info();
 	int pfd[2];
 	int status;
 	//char w[12], h[12];
+    //this is path to script that can get tags but this whole thing is not working yet
 	char *cmd = "/root/test.sh";
 	fprintf(stderr,"cmd --> %s\n",cmd);
 	fprintf(stderr, "test if cmd exists -> %d\n",access(cmd, X_OK)); 
