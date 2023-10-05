@@ -126,6 +126,7 @@ void win_init(win_t *win)
 	win_alloc_color(e, bg, &win->bg);
 	win_alloc_color(e, fg, &win->fg);
 	win_alloc_color(e, red, &win->red);					/* red color added */
+	win_alloc_color(e, SEL_COLOR, &win->selcol);
 
 	win->bar.l.size = BAR_L_LEN;
 	win->bar.r.size = BAR_R_LEN;

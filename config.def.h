@@ -11,6 +11,7 @@ enum {
  * See X(7) section Resources and xrdb(1) for more information.
  */
 static const char * const MARK_COLOR   = "#FF0000";
+static const char * const SEL_COLOR   = "#00FF00";
 
 #endif
 #ifdef _IMAGE_CONFIG

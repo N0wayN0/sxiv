@@ -408,6 +408,7 @@ struct win {
 	win_env_t env;
 
 	XftColor markcol;
+	XftColor selcol;
 	XftColor bg;
 	XftColor fg;
 	XftColor red;
