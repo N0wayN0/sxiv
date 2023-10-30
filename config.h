@@ -160,6 +160,8 @@ static const keymap_t keys[] = {
 	{ 0,			XK_Delete,        g_run_cmd,		    2 },
 	{ 0,			XK_o,             g_run_cmd,		    3 },
 	{ 0,			XK_S,             g_run_cmd,		    4 },
+	{ 0,			XK_M,             g_run_cmd,		    5 },
+	{ 0,			XK_i,             g_run_cmd,		    6 },
 };
 
 /* mouse button mappings for image mode: */

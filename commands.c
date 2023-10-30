@@ -89,6 +89,15 @@ bool cg_run_cmd(arg_t _) {
 	            fprintf(stderr, "case 4:%d\n",_);
                 run_ext_command(spawnshell);
 				break;
+			case 5:
+	            fprintf(stderr, "case 5:%d\n",_);
+                run_ext_command(movefile);
+                load_image(fileidx);    // refresh after remove 
+				break;
+			case 6:
+	            fprintf(stderr, "case 6:%d\n",_);
+                run_ext_command(fullinfo);
+				break;
 	    }
 
 

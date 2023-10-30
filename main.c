@@ -308,10 +308,23 @@ close_info();
 	if (pipe(pfd) < 0) {
 		return;
 	}
+
+	unsigned int i;
+    char *selected_files[10];
+	if (markcnt > 0) {
+		for (i = 0; i < filecnt; i++) {
+			if (files[i].flags & FF_MARK)
+				printf("%s\n", files[i].path);
+    //            strcat(&selected_files, files[i].path);
+		}
+        printf("%s\n", selected_files);
+    }
+
+
 	if ((info.pid = fork()) == 0) {
 		close(pfd[0]);
 		dup2(pfd[1], 1);
-		execl(cmd, cmd, files[fileidx].path, NULL);
+        execl(cmd, cmd, files[fileidx].path, NULL);
 		error(EXIT_FAILURE, errno, "exec: %s", cmd);
 	}
 	close(pfd[1]);
