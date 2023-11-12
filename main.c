@@ -291,12 +291,44 @@ void close_info(void)
 void edit_tags(char *cmd)
 {
 close_info();
+    // ta funkcja musi ocenic czy sa zaznaczone pliki i odpalic multi-files tag-edit opcje
+    // albo jak nie sa zaznaczone to onr file edit file
+    // mozna bedzie ja przerobic zeby odpalala takze del i move-files (marked or one)
 	// musi odpalic script z parametrem "cala/sciezka/do/pliku"
+    fprintf(stderr, "nowa funkcja do tagow. multifile opcja \n");
+    
+    cmd = "/root/edit_tags_orig.sh";
+
+    char** argv = (char**)malloc((markcnt + 2)* sizeof(char*));  // +2 is for command and NULL
+	argv[0] = cmd;
+	
+    if (markcnt > 0) {
+    fprintf(stderr, "marked files\n");
+	    unsigned int i;
+	    unsigned int x = 0;
+        for (i = 0; i < filecnt; i++) {
+	        if (files[i].flags & FF_MARK) {
+                x += 1;
+			    argv[x] = files[i].path;
+            }
+		}
+        argv[x+1] = NULL;
+	} else {
+        fprintf(stderr, "single file\n");
+	    argv[1] = files[fileidx].path;
+        argv[2] = NULL;
+    }
+
+	printf("array loaded\n");
+
+
+
 	int pfd[2];
 	int status;
 	//char *cmd = "/root/.config/sxiv/exec/edit-tags.sh";
 	//char *cmd = edittags;
         if (access(cmd, X_OK) != 0) {
+            fprintf(stderr, "no cmd exit\n");
             return;
         }
 	info.fd = -1;
@@ -309,22 +341,11 @@ close_info();
 		return;
 	}
 
-	unsigned int i;
-    char *selected_files[10];
-	if (markcnt > 0) {
-		for (i = 0; i < filecnt; i++) {
-			if (files[i].flags & FF_MARK)
-				printf("%s\n", files[i].path);
-    //            strcat(&selected_files, files[i].path);
-		}
-        printf("%s\n", selected_files);
-    }
-
-
 	if ((info.pid = fork()) == 0) {
 		close(pfd[0]);
 		dup2(pfd[1], 1);
-        execl(cmd, cmd, files[fileidx].path, NULL);
+        //execl(cmd, cmd, files[fileidx].path, NULL);
+        execvp(cmd, argv);
 		error(EXIT_FAILURE, errno, "exec: %s", cmd);
 	}
 	close(pfd[1]);
@@ -336,6 +357,8 @@ close_info();
 		info.fd = pfd[0];
 		info.i = info.lastsep = 0;
 	}
+    free(argv);
+    fprintf(stderr, "koniec fork. free array\n");
 }
 
 void read_tags(void)

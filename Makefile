@@ -84,6 +84,10 @@ install: all
 	mkdir -p $(DESTDIR)$(PREFIX)/share/sxiv/exec
 	cp exec/* $(DESTDIR)$(PREFIX)/share/sxiv/exec/
 	chmod 755 $(DESTDIR)$(PREFIX)/share/sxiv/exec/*
+	@echo "INSTALL ~/.config/sxiv/"
+	mkdir -p ~/.config/sxiv/exec
+	cp exec/* ~/.config/sxiv/exec/
+	chmod 755 ~/.config/sxiv/exec/*
 
 uninstall:
 	@echo "REMOVE bin/sxiv"

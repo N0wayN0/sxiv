@@ -72,12 +72,11 @@ bool cg_run_cmd(arg_t _) {
 		switch (_) {
 			case 1:
 	            fprintf(stderr, "case 1:%d\n",_);
-                run_ext_command("/root/edit_tags.sh");
+                run_ext_command(edittags);
 				break;
 			case 2:
 	            fprintf(stderr, "case 2:%d\n",_);
 	            fprintf(stderr, "Pressed Delete");
-                //run_ext_command("/root/.config/sxiv/exec/del-file.sh");
                 run_ext_command(cmd1);
                 load_image(fileidx);    // refresh after remove 
 				break;
@@ -220,6 +219,28 @@ bool cg_quit(arg_t _)
 		}
 	} else printf("%s\n", files[fileidx].path);
 	exit(EXIT_SUCCESS);
+}
+
+bool xxxxcg_quit(arg_t _)
+{
+	if (markcnt > 0) {
+	    unsigned int i;
+	    unsigned int x = 0;
+        char** argv = (char**)malloc((markcnt + 2)* sizeof(char*));  // +2 is for command and NULL
+		argv[0] = "echo";
+
+        for (i = 0; i < filecnt; i++) {
+	        if (files[i].flags & FF_MARK) {
+                x += 1;
+			    argv[x] = files[i].path;
+            }
+		}
+        argv[x+1] = NULL;
+        execvp("echo", argv);
+        free(argv);
+	}
+	printf("koniec\n");
+    return true;
 }
 
 bool cg_switch_mode(arg_t _)

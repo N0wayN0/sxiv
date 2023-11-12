@@ -2,7 +2,7 @@
 
 # this script open YAD and remove file passed as parameter
 
-yad --center --width=600 height=400 --text=" Are you sure you want to remove this file?\n\n$1" --button=gtk-ok:0 --button=gtk-no:1
+yad --class=float --center --width=600 --height=200 --text=" Are you sure you want to remove this file?\n\n$1" --button=gtk-ok:0 --button=gtk-no:1
 
 if [ $? -eq 0 ] && [ "$1" ] 
 then

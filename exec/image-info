@@ -16,6 +16,4 @@ filesize=$(du -Hh "$1" | cut -f 1)
 #width=$(echo $allinfo | jq ".Width")
 #height=$(echo $allinfo | jq ".Height")
 
-
-#echo "${width}x${height} ${filesize} ${filename}"
 echo "${2}x${3} ${filesize} ${filename}"
