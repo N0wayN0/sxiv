@@ -17,8 +17,14 @@ if [ "$#" -eq 1 ]; then
 
     if [ $? -eq 0 ]
         then
-            tagi.py update "$path" "$user"
-            echo "updating $1"
+            echo "tags:  $user"
+            if [ "$user" ]; then
+                echo "updating $1"
+                tagi.py update "$path" "$user"
+            else
+                echo "removing $1"
+                tagi.py remove "$path"
+            fi
     fi
 
 else    # many files

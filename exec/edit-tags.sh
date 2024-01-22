@@ -17,8 +17,13 @@ user=$(echo -n "$tags" | yad --center --width=1200 --text-info --editable --wrap
 
 if [ $? -eq 0 ]
     then
-        #tagi=`echo $user | tr "|" " "`
-        #tagi.py add "$path" "$tagi"
-        tagi.py update "$path" "$user"
+        echo "tags:  $user"
+        if [ "$user" ]; then
+            echo "updating $1"
+            tagi.py update "$path" "$user"
+        else
+            echo "removing $1"
+            tagi.py remove "$path"
+        fi
 fi
 
