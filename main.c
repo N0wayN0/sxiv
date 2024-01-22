@@ -297,7 +297,7 @@ close_info();
 	// musi odpalic script z parametrem "cala/sciezka/do/pliku"
     fprintf(stderr, "nowa funkcja do tagow. multifile opcja \n");
     
-    cmd = "/root/edit_tags_orig.sh";
+    cmd = "/root/.config/sxiv/exec/edit-tags-multi.sh";
 
     char** argv = (char**)malloc((markcnt + 2)* sizeof(char*));  // +2 is for command and NULL
 	argv[0] = cmd;
