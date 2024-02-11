@@ -57,6 +57,7 @@ extern int markcnt;
 extern int markidx;
 
 extern int prefix;
+char *opt = "navigate";
 extern bool extprefix;
 
 bool cg_edit_tags(arg_t _) {
@@ -448,8 +449,19 @@ bool cg_change_gamma(arg_t d)
 	}
 }
 
+bool ci_change_mode(arg_t n)
+{
+    if (opt == "navigate") 
+        opt = "zoom";
+    else 
+       opt = "navigate";
+    return true;
+}
+
 bool ci_navigate(arg_t n)
 {
+
+	fprintf(stderr, "PARAM:%s\n",opt);
 	if (prefix > 0)
 		n *= prefix;
 	n += fileidx;
@@ -464,6 +476,18 @@ bool ci_navigate(arg_t n)
 	} else {
 		return false;
 	}
+}
+
+bool ci_nav_or_zoom(arg_t n)
+{
+    if (opt == "navigate") {
+	    //fprintf(stderr, "PARAM:%d\n",n);
+        ci_navigate(n);
+    } else { 
+	    //reverse to make wheel up makes zoom in
+        cg_zoom(n*-1);
+    }
+    return true;
 }
 
 bool ci_cursor_navigate(arg_t _)

@@ -20,8 +20,9 @@ static const char * const SEL_COLOR   = "#00FF00";
  * (first/last value is used as min/max zoom level)
  */
 static const float zoom_levels[] = {
-	 12.5,  25.0,  50.0,  75.0,
-	100.0, 150.0, 200.0, 400.0, 800.0
+	 20.0, 30.0, 40.0, 50.0, 60.0, 75.0,
+	100.0, 
+    140.0, 180.0, 230.0, 280.0, 350.0, 600.0
 };
 
 /* default slideshow delay (in sec, overwritten via -S option): */
@@ -171,9 +172,13 @@ static const button_t buttons[] = {
 	{ ControlMask,  5,                g_zoom,    			-1 },				/* wheel down	- zoom out */
 	{ 0,            1,                i_drag,               DRAG_RELATIVE },	/* left click 	- dragg zoomed image */
 	{ ControlMask,  3,                i_fit_to_win,         SCALE_FIT },		/* right click 	- reset zoom make full screen */
+	{ 0,            9,                i_fit_to_win,         SCALE_FIT },		/* forward btn 	- reset zoom make full screen */
 	{ 0,            2,                g_switch_mode,        None },				/* wheel click	- go to thumb mode */
-	{ 0,            4,                i_navigate,           -1 },				/* wheel up		- navigate back */
-	{ 0,            5,                i_navigate,           +1 },				/* wheel down	- nawigate next */
+//  { 0,            4,                i_navigate,           -1 },				/* wheel up		- navigate back */
+//	{ 0,            5,                i_navigate,           +1 },				/* wheel down	- nawigate next */
+	{ 0,            8,                i_change_mode,        +1 },				/* back btn     - chamge function of wheel to navigate or zoom  */
+    { 0,            4,                i_nav_or_zoom,        -1 },				/* wheel up		- navigate back or zoom in */
+	{ 0,            5,                i_nav_or_zoom,        +1 },				/* wheel down	- navigate next or zoom out */
 };
 
 #endif
