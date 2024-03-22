@@ -163,6 +163,7 @@ static const keymap_t keys[] = {
 	{ 0,			XK_S,             g_run_cmd,		    4 },
 	{ 0,			XK_M,             g_run_cmd,		    5 },
 	{ 0,			XK_i,             g_run_cmd,		    6 },
+	{ 0,			XK_z,             g_run_cmd,		    7 },
 };
 
 /* mouse button mappings for image mode: */
@@ -179,6 +180,7 @@ static const button_t buttons[] = {
 	{ 0,            8,                i_change_mode,        +1 },				/* back btn     - chamge function of wheel to navigate or zoom  */
     { 0,            4,                i_nav_or_zoom,        -1 },				/* wheel up		- navigate back or zoom in */
 	{ 0,            5,                i_nav_or_zoom,        +1 },				/* wheel down	- navigate next or zoom out */
+	{ 0,            3,                g_run_cmd,            7 },                /* show context menu */
 };
 
 #endif

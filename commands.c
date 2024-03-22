@@ -98,7 +98,13 @@ bool cg_run_cmd(arg_t _) {
 	            fprintf(stderr, "case 6:%d\n",_);
                 run_ext_command(fullinfo);
 				break;
+			case 7:
+	            fprintf(stderr, "case 7:%d\n",_);
+                run_ext_command(menu);
+				break;
 	    }
+		tns.dirty = true;
+	    img.dirty = true;
 
 
 
@@ -461,7 +467,7 @@ bool ci_change_mode(arg_t n)
 bool ci_navigate(arg_t n)
 {
 
-	fprintf(stderr, "PARAM:%s\n",opt);
+	//fprintf(stderr, "PARAM:%s\n",opt);
 	if (prefix > 0)
 		n *= prefix;
 	n += fileidx;
@@ -480,8 +486,8 @@ bool ci_navigate(arg_t n)
 
 bool ci_nav_or_zoom(arg_t n)
 {
+	fprintf(stderr, "PARAM:%s\n",opt);
     if (opt == "navigate") {
-	    //fprintf(stderr, "PARAM:%d\n",n);
         ci_navigate(n);
     } else { 
 	    //reverse to make wheel up makes zoom in

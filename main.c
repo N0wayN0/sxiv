@@ -265,8 +265,9 @@ void run_ext_command(char *cmd)
 	if ((info.pid = fork()) == 0) {
 		close(pfd[0]);
 		dup2(pfd[1], 1);
+	    //fprintf(stderr, "RUN--->:%s\n",cmd);
 		execl(cmd, cmd, files[fileidx].path, NULL);
-		error(EXIT_FAILURE, errno, "exec: %s", cmd);
+		error(EXIT_FAILURE, errno, "Failed exec: %s", cmd);
 	}
 	close(pfd[1]);
 	wait(&status);
@@ -369,17 +370,17 @@ close_info();
 	//char w[12], h[12];
     //this is path to script that can get tags but this whole thing is not working yet
 	char *cmd = "/root/test.sh";
-	fprintf(stderr,"cmd --> %s\n",cmd);
-	fprintf(stderr, "test if cmd exists -> %d\n",access(cmd, X_OK)); 
-			if (access(cmd, X_OK) != 0) {
-				fprintf(stderr,"nie istnieje %s\n",cmd);
-				fprintf(stderr,"exit\n");
-				return;
-			}
+	//fprintf(stderr,"cmd --> %s\n",cmd);
+	//fprintf(stderr, "test if cmd exists -> %d\n",access(cmd, X_OK)); 
+		if (access(cmd, X_OK) != 0) {
+		fprintf(stderr,"nie istnieje %s\n",cmd);
+		fprintf(stderr,"exit\n");
+		return;
+		}
 	info.fd = -1;
 
-		fprintf(stderr,"wykonauje bo plik cmd isnieje \n");
-		fprintf(stderr,"test info.fd -->  %d\n",info.fd);
+		//fprintf(stderr,"wykonauje bo plik cmd isnieje \n");
+		//fprintf(stderr,"test info.fd -->  %d\n",info.fd);
 	if (info.f.err != 0 || info.fd >= 0){ // || win.bar.h == 0)
 		fprintf(stderr,"error cos jest xle koniec\n");
 		return;
@@ -644,7 +645,7 @@ void update_info(void)
 
 void cursor_track()
 {
-read_tags();
+//read_tags();
 	int x, y;
 	win_bar_t *l = &win.bar.l, *r = &win.bar.r;
 	l->p = l->buf;
@@ -685,8 +686,12 @@ read_tags();
 	}
 	if ((top_edge == true ) && ( x > 308 ) && (x < 433 )) {  // jest na napisie
 		fprintf(stderr,"xxxx ooodddppppaaallllaa  xxxx\n"); 
-read_tags();
-	
+		read_tags();
+	}
+	if (x < 43 ) {  // jest z lewej
+		fprintf(stderr,"pokazuje tagi\n"); 
+        //char *menu = "/root/.config/sxiv/exec/context_menu.sh ";
+        //run_ext_command(menu);
 	}
 	if ((top_edge == true ) && ( x > win.w-10 ) && (x < win.w )) {  // jest na napisie
 		fprintf(stderr,"odpalaa exit bo jest myszka w rogu\n"); 
@@ -928,7 +933,7 @@ void on_buttonpress(XButtonEvent *bev)
 	if (mode == MODE_IMAGE) {
 		set_timeout(reset_cursor, TO_CURSOR_HIDE, true);
 		reset_cursor();
-		if (bev->button == Button1) {  // zrobile double click on image daje thumbsy
+		if (bev->button == Button1) {  // zrobilem double click on image daje thumbsy
 			if (bev->time - firstclick <= TO_DOUBLE_CLICK) {
 				tns_init(&tns, files, &filecnt, &fileidx, &win);
 				img_close(&img, false);
@@ -945,6 +950,9 @@ void on_buttonpress(XButtonEvent *bev)
 			    buttons[i].cmd >= 0 && buttons[i].cmd < CMD_COUNT &&
 			    (cmds[buttons[i].cmd].mode < 0 || cmds[buttons[i].cmd].mode == mode))
 			{
+                const struct timespec ten_ms = {0, 100000000};
+				nanosleep(&ten_ms, NULL);
+                // I added delay here becose xmenu do not show up
 				if (cmds[buttons[i].cmd].func(buttons[i].arg))
 					dirty = true;
 			}
@@ -972,7 +980,7 @@ void on_buttonpress(XButtonEvent *bev)
 					}
 				}
 				break;
-			case Button3:
+			case Button2:
 				if ((sel = tns_translate(&tns, bev->x, bev->y)) >= 0) {
 					bool on = !(files[sel].flags & FF_MARK);
 					XEvent e;
@@ -990,6 +998,15 @@ void on_buttonpress(XButtonEvent *bev)
 				}
 				break;
 			case Button4:
+			case Button3:
+                fprintf(stderr,"Button 3 pressed\n"); 
+                //char *menu = "/root/.config/sxiv/exec/context_menu.sh";
+                //char *menu = "/root/.config/sxiv/exec/full-info.sh";
+                //const struct timespec ten_ms = {0, 100000000};
+				//nanosleep(&ten_ms, NULL);
+                //run_ext_command(menu);
+
+                break;
 			case Button5:
 				if (tns_scroll(&tns, bev->button == Button4 ? DIR_UP : DIR_DOWN,
 				               (bev->state & ControlMask) != 0))
