@@ -31,8 +31,9 @@ void remove_file(int, bool);
 void move_one_image(int, int);
 void move_img(int);
 //void edit_tags(void);
-void edit_tags(char*);
+//void edit_tags(char*);
 void run_ext_command(char*);
+void run_ext_command_current_file(char*);
 void load_image(int);
 bool mark_image(int, bool);
 void close_info(void);
@@ -62,7 +63,8 @@ extern bool extprefix;
 
 bool cg_edit_tags(arg_t _) {
     fprintf(stderr, "Edit tags in commands.c\n");
-    edit_tags(edittags);
+    //edit_tags(edittags);
+    run_ext_command_current_file(edittags);
 return true;
 }
 
@@ -73,34 +75,34 @@ bool cg_run_cmd(arg_t _) {
 		switch (_) {
 			case 1:
 	            fprintf(stderr, "case 1:%d\n",_);
-                run_ext_command(edittags);
+                run_ext_command(editmultitags);
 				break;
 			case 2:
 	            fprintf(stderr, "case 2:%d\n",_);
 	            fprintf(stderr, "Pressed Delete");
-                run_ext_command(cmd1);
+                run_ext_command(delfiles);
                 load_image(fileidx);    // refresh after remove 
 				break;
 			case 3:
 	            fprintf(stderr, "case 3:%d\n",_);
-                run_ext_command(openfolder);
+                run_ext_command_current_file(openfolder);
 				break;
 			case 4:
 	            fprintf(stderr, "case 4:%d\n",_);
-                run_ext_command(spawnshell);
+                run_ext_command_current_file(spawnshell);
 				break;
 			case 5:
 	            fprintf(stderr, "case 5:%d\n",_);
-                run_ext_command(movefile);
+                run_ext_command(movefiles);
                 load_image(fileidx);    // refresh after remove 
 				break;
 			case 6:
 	            fprintf(stderr, "case 6:%d\n",_);
-                run_ext_command(fullinfo);
+                run_ext_command_current_file(fullinfo);
 				break;
 			case 7:
 	            fprintf(stderr, "case 7:%d\n",_);
-                run_ext_command(menu);
+                run_ext_command_current_file(menu);
 				break;
 	    }
 		tns.dirty = true;

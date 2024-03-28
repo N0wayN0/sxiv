@@ -1,5 +1,8 @@
 #!/bin/bash
 
+#for file in "$@";do
+#    echo "$file"
+#done
 
-st -e fzf-move.sh "$1"
+st -e fzf-move.sh "$@"
 

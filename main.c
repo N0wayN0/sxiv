@@ -242,44 +242,6 @@ bool check_timeouts(struct timeval *t)
 	return tmin > 0;
 }
 
-void run_ext_command(char *cmd)
-{
-//close_info();
-	// musi odpalic script z parametrem "cala/sciezka/do/pliku"
-	fprintf(stderr, "external:%s\n",cmd);
-	int pfd[2];
-	int status;
-        if (access(cmd, X_OK) != 0) {
-            fprintf(stderr, "main.c run_ext_cmd: exec file not exists (-x) --> %s",cmd);
-            return;
-        }
-	info.fd = -1;
-
-	if (info.f.err != 0 || info.fd >= 0){ 
-		return;
-	}
-	//win.bar.l.buf[0] = '\0';
-	if (pipe(pfd) < 0) {
-		return;
-	}
-	if ((info.pid = fork()) == 0) {
-		close(pfd[0]);
-		dup2(pfd[1], 1);
-	    //fprintf(stderr, "RUN--->:%s\n",cmd);
-		execl(cmd, cmd, files[fileidx].path, NULL);
-		error(EXIT_FAILURE, errno, "Failed exec: %s", cmd);
-	}
-	close(pfd[1]);
-	wait(&status);
-	if (info.pid < 0) {
-		close(pfd[0]);
-	} else {
-		fcntl(pfd[0], F_SETFL, O_NONBLOCK);
-		info.fd = pfd[0];
-		info.i = info.lastsep = 0;
-	}
-}
-
 void close_info(void)
 {
 	if (info.fd != -1) {
@@ -289,31 +251,31 @@ void close_info(void)
 	}
 }
 
-void edit_tags(char *cmd)
+// run external commannd on selected files
+void run_ext_command(char *cmd)
 {
 close_info();
-    // ta funkcja musi ocenic czy sa zaznaczone pliki i odpalic multi-files tag-edit opcje
-    // albo jak nie sa zaznaczone to onr file edit file
+    // ta funkcja musi ocenic czy sa zaznaczone pliki i odpalic multi-files opcje
+    // albo jak nie sa zaznaczone to one file opcje
     // mozna bedzie ja przerobic zeby odpalala takze del i move-files (marked or one)
 	// musi odpalic script z parametrem "cala/sciezka/do/pliku"
-    fprintf(stderr, "nowa funkcja do tagow. multifile opcja \n");
-    
-    cmd = "/root/.config/sxiv/exec/edit-tags-multi.sh";
+    fprintf(stderr, "nowa funkcja do external commands. multifile opcja \n");
+    fprintf(stderr, "cmd: %s\n",cmd);
 
     char** argv = (char**)malloc((markcnt + 2)* sizeof(char*));  // +2 is for command and NULL
 	argv[0] = cmd;
 	
     if (markcnt > 0) {
-    fprintf(stderr, "marked files\n");
-	    unsigned int i;
-	    unsigned int x = 0;
-        for (i = 0; i < filecnt; i++) {
-	        if (files[i].flags & FF_MARK) {
-                x += 1;
-			    argv[x] = files[i].path;
-            }
-		}
-        argv[x+1] = NULL;
+    fprintf(stderr, "marked files: %d\n",markcnt);
+    unsigned int i;
+    unsigned int x = 0;
+    for (i = 0; i < filecnt; i++) {
+	    if (files[i].flags & FF_MARK) {
+            x += 1;
+		    argv[x] = files[i].path;
+        }
+	}
+    argv[x+1] = NULL;
 	} else {
         fprintf(stderr, "single file\n");
 	    argv[1] = files[fileidx].path;
@@ -322,12 +284,8 @@ close_info();
 
 	printf("array loaded\n");
 
-
-
 	int pfd[2];
 	int status;
-	//char *cmd = "/root/.config/sxiv/exec/edit-tags.sh";
-	//char *cmd = edittags;
         if (access(cmd, X_OK) != 0) {
             fprintf(stderr, "no cmd exit\n");
             return;
@@ -360,6 +318,47 @@ close_info();
 	}
     free(argv);
     fprintf(stderr, "koniec fork. free array\n");
+}
+
+void run_ext_command_current_file(char *cmd)
+{
+close_info();
+    // cmd = "/root/.config/sxiv/exec/edit-tags.sh";
+	// musi odpalic script z parametrem "cala/sciezka/do/pliku"
+    fprintf(stderr, "funkcja external command on current file only\n");
+
+	int pfd[2];
+	int status;
+    if (access(cmd, X_OK) != 0) {
+        fprintf(stderr, "no cmd exit\n");
+        return;
+    }
+	info.fd = -1;
+
+	if (info.f.err != 0 || info.fd >= 0){ 
+		return;
+	}
+	win.bar.l.buf[0] = '\0';
+	if (pipe(pfd) < 0) {
+		return;
+	}
+
+	if ((info.pid = fork()) == 0) {
+		close(pfd[0]);
+		dup2(pfd[1], 1);
+        execl(cmd, cmd, files[fileidx].path, NULL);
+		error(EXIT_FAILURE, errno, "exec: %s", cmd);
+	}
+	close(pfd[1]);
+	wait(&status);
+	if (info.pid < 0) {
+		close(pfd[0]);
+	} else {
+		fcntl(pfd[0], F_SETFL, O_NONBLOCK);
+		info.fd = pfd[0];
+		info.i = info.lastsep = 0;
+	}
+    fprintf(stderr, "koniec fork.\n");
 }
 
 void read_tags(void)
