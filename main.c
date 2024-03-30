@@ -136,21 +136,26 @@ void check_add_file(char *filename, bool given)
 
 void move_one_image(int n, int direction)
 {
-		fprintf(stderr, "MOVE:Selected: %s\n", files[n].path);
-		
-		if (direction == 1) {
-			fprintf(stderr, "MOVE:Direction LEFT\n");
-			files[filecnt+1] = files[n-1];	/* wczesniejszy zapisuje do tempa */
-			files[n-1] = files[n];			/* przesuwa zaznaczony w jedo miejsce */
-			files[n] = files[filecnt+1];	/* z tempa wstawia na miejsce zaznaczonego */
-
-		} else {
-			fprintf(stderr, "MOVE:Direction RIGHT\n");
-			files[filecnt+1] = files[n+1];	/* nastepny zapisuje do tempa */
-			files[n+1] = files[n];			/* przesuwa zaznaczony w jedo miejsce */
-			files[n] = files[filecnt+1];	/* z tempa wstawia na miejsce zaznaczonego */
-		}
-		return; 
+    fprintf(stderr, "MOVE:Selected: %s\n", files[n].path);
+    
+    if (direction == DIR_LEFT) {
+        fprintf(stderr, "MOVE:Direction LEFT\n");
+        files[filecnt+1] = files[n-1];	/* wczesniejszy zapisuje do tempa */
+        files[n-1] = files[n];			/* przesuwa zaznaczony w jedo miejsce */
+        files[n] = files[filecnt+1];	/* z tempa wstawia na miejsce zaznaczonego */
+    } else if (direction == DIR_RIGHT) {
+        fprintf(stderr, "MOVE:Direction RIGHT\n");
+        files[filecnt+1] = files[n+1];	/* nastepny zapisuje do tempa */
+        files[n+1] = files[n];			/* przesuwa zaznaczony w jedo miejsce */
+        files[n] = files[filecnt+1];	/* z tempa wstawia na miejsce zaznaczonego */
+    } else if (direction == DIR_DOWN) {
+        fprintf(stderr, "MOVE:Direction DOWN\n");
+        files[n+1].path = "/root/Downloads/0463824149471c93734b21551a6d6b4b.jpg";
+        //files[filecnt+1] = files[n+5];	/* nastepny zapisuje do tempa */
+        ///files[n+5] = files[n];			/* przesuwa zaznaczony w jedo miejsce */
+        //files[n] = files[filecnt+1];	/* z tempa wstawia na miejsce zaznaczonego */
+    }
+    return; 
 
 }
 

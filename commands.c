@@ -118,11 +118,11 @@ bool ct_move_img(arg_t direction)
 	fprintf(stderr, "Direction:%d\n",direction);
 	/*fprintf(stderr, "index:%d\n",fileidx);
 	fprintf(stderr, "total:%d\n",filecnt);*/
-	if (fileidx == 0 && direction == 1) {				/* LEFT */
+	if (fileidx == 0 && direction == DIR_LEFT) {
 		fprintf(stderr, "Nie da sie\n");
 		return true;
 	}	
-	if (fileidx +1  == filecnt && direction == 2) {		/* RIGHT */
+	if (fileidx +1  == filecnt && direction == DIR_RIGHT) {
 		fprintf(stderr, "Nie da sie\n");
 		return true;
 	}

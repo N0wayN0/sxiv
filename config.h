@@ -77,7 +77,7 @@ static const keymap_t keys[] = {
 	{ ControlMask,  XK_h,             g_scroll_screen,      DIR_LEFT },
 	{ ControlMask,  XK_Left,          g_scroll_screen,      DIR_LEFT },
 	{ ControlMask,  XK_j,             g_scroll_screen,      DIR_DOWN },
-	{ ControlMask,  XK_Down,          g_scroll_screen,      DIR_DOWN },
+	//{ ControlMask,  XK_Down,          g_scroll_screen,      DIR_DOWN },
 	{ ControlMask,  XK_k,             g_scroll_screen,      DIR_UP },
 	{ ControlMask,  XK_Up,            g_scroll_screen,      DIR_UP },
 	{ ControlMask,  XK_l,             g_scroll_screen,      DIR_RIGHT },
@@ -152,6 +152,7 @@ static const keymap_t keys[] = {
 
 	{ ControlMask,  XK_Right,         t_move_img,	        DIR_RIGHT },
 	{ ControlMask,  XK_Left,          t_move_img,   	    DIR_LEFT },
+	{ ControlMask,  XK_Down,          t_move_img,   	    DIR_DOWN },
 	{ ControlMask,  XK_s,             g_dump_files,	        1 },
 	{ ControlMask,  XK_a,             g_dump_files,	        2 },
 	{ ControlMask,  XK_d,             g_del_selected,	    None },
