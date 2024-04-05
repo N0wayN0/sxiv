@@ -66,6 +66,7 @@ bool extprefix;
 
 bool resized = false;
 bool top_edge = false;
+bool left_edge = false;
 bool bottom_edge = false;
 
 typedef struct {
@@ -423,6 +424,7 @@ close_info();
 	ssize_t i, n;
 	char buf[BAR_L_LEN];
 	//char *win_bar_l_buf;
+	char tags[50];
 
 	while (true) {
 		n = read(info.fd, buf, sizeof(buf));
@@ -443,10 +445,15 @@ close_info();
 					//win_bar_l_buf[i++] = ' ';
 					//info.lastsep = 1;
 				}
+			if (buf[i] == 0x0a) {
+			    buf[i] = 0x00;
+			    goto end;
+            }
 			} else {
 				//win_bar_l_buf[i++] = buf[i];
 				//fprintf(stderr,"dobrze\n");
 				//info.lastsep = 0;
+                tags[i] = buf[i];
 			}
 			if (info.i + 1 == win.bar.l.size)
 				goto end;
@@ -456,9 +463,9 @@ end:
 	//info.i -= info.lastsep;
 	//win_bar_l_buf[info.i] = '\0';
 	//fprintf(stderr,"odczytal: %s\n",win_bar_l_buf);  // tu jest to co cmd przekazal   image-info
-	fprintf(stderr,"odczytal: %s\n",buf);  // tu jest to co cmd przekazal   image-info
+	fprintf(stderr,"odczytal: %s\n",tags);  // tu jest to co cmd przekazal   image-info
 		//win_draw_text(win, d, &win->red, 300, 300, buf, strlen(buf), w);
-    draw_tags(&win, buf);  // wyswietla to co zostalo pobrane z odmalonek komendy
+    draw_tags(&win, tags);  // wyswietla to co zostalo pobrane z odmalonek komendy
 	win_draw(&win);
 	//info.fd = -1;
 	//close_info();
@@ -692,10 +699,15 @@ void cursor_track()
 		fprintf(stderr,"xxxx ooodddppppaaallllaa  xxxx\n"); 
 		read_tags();
 	}
-	if (x < 43 ) {  // jest z lewej
-		fprintf(stderr,"pokazuje tagi\n"); 
+	if ((x < 43) && (left_edge == false)) {  // jest z lewej
+		fprintf(stderr,"pokazuje tagi bo cursor jest z lewej strony\n"); 
+		read_tags();
         //char *menu = "/root/.config/sxiv/exec/context_menu.sh ";
         //run_ext_command(menu);
+		left_edge = true;
+	}
+	if ((x > 43) && (left_edge == true)) {  // jest z lewej
+		left_edge = false;
 	}
 	if ((top_edge == true ) && ( x > win.w-10 ) && (x < win.w )) {  // jest na napisie
 		fprintf(stderr,"odpalaa exit bo jest myszka w rogu\n"); 

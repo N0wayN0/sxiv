@@ -463,6 +463,13 @@ bool ci_change_mode(arg_t n)
         opt = "zoom";
     else 
        opt = "navigate";
+
+    if (n == 1) {
+        opt = "navigate";
+	    img_fit_win(&img, SCALE_FIT);
+	    fprintf(stderr, "SET IMAGE:SCALE_FIT");
+    }
+	fprintf(stderr, "SET MODE:%s\n",opt);
     return true;
 }
 
@@ -488,7 +495,7 @@ bool ci_navigate(arg_t n)
 
 bool ci_nav_or_zoom(arg_t n)
 {
-	fprintf(stderr, "PARAM:%s\n",opt);
+	fprintf(stderr, "MODE:%s\n",opt);
     if (opt == "navigate") {
         ci_navigate(n);
     } else { 

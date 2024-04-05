@@ -12,6 +12,10 @@ enum {
  */
 static const char * const MARK_COLOR   = "#FF0000";
 static const char * const SEL_COLOR   = "#00FF00";
+static const char * const BG_COLOR   = "#000000";
+static const char * const BAR_COLOR   = "#7d7d80";
+static const char * const RED   = "#00FF00";
+static const char * const FONT   = "liberation-14";
 
 #endif
 #ifdef _IMAGE_CONFIG
@@ -174,11 +178,11 @@ static const button_t buttons[] = {
 	{ ControlMask,  5,                g_zoom,    			-1 },				/* wheel down	- zoom out */
 	{ 0,            1,                i_drag,               DRAG_RELATIVE },	/* left click 	- dragg zoomed image */
 	{ ControlMask,  3,                i_fit_to_win,         SCALE_FIT },		/* right click 	- reset zoom make full screen */
-	{ 0,            9,                i_fit_to_win,         SCALE_FIT },		/* forward btn 	- reset zoom make full screen */
+	{ 0,            9,                i_change_mode,        1 },	        	/* forward btn 	- reset zoom make full screen and force navigate mode*/
 	{ 0,            2,                g_switch_mode,        None },				/* wheel click	- go to thumb mode */
 //  { 0,            4,                i_navigate,           -1 },				/* wheel up		- navigate back */
 //	{ 0,            5,                i_navigate,           +1 },				/* wheel down	- nawigate next */
-	{ 0,            8,                i_change_mode,        +1 },				/* back btn     - chamge function of wheel to navigate or zoom  */
+	{ 0,            8,                i_change_mode,        0 },				/* back btn     - chamge function of wheel to navigate or zoom  */
     { 0,            4,                i_nav_or_zoom,        -1 },				/* wheel up		- navigate back or zoom in */
 	{ 0,            5,                i_nav_or_zoom,        +1 },				/* wheel down	- navigate next or zoom out */
 	{ 0,            3,                g_run_cmd,            7 },                /* show context menu */

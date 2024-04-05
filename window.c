@@ -92,9 +92,9 @@ const char* win_res(XrmDatabase db, const char *name, const char *def)
 void win_init(win_t *win)
 {
 	win_env_t *e;
-	const char *bg, *fg, *f, *red;
-	char *res_man;
-	XrmDatabase db;
+	//const char *bg, *fg, *f, *red;
+	////char *res_man;
+	/////XrmDatabase db;
 
 	memset(win, 0, sizeof(win_t));
 
@@ -113,19 +113,21 @@ void win_init(win_t *win)
 		error(0, 0, "No locale support");
 
 	XrmInitialize();
-	res_man = XResourceManagerString(e->dpy);
-	db = res_man != NULL ? XrmGetStringDatabase(res_man) : None;
+	/////res_man = XResourceManagerString(e->dpy);
+	//////db = res_man != NULL ? XrmGetStringDatabase(res_man) : None;
 
-	f = win_res(db, RES_CLASS ".font", "liberation-14");	/* font and size */
-	win_init_font(e, f);
+	/////f = win_res(db, RES_CLASS ".font", "liberation-14");	/* font and size */
+	win_init_font(e, FONT);
 
-	bg = win_res(db, RES_CLASS ".background", "black");		/* background and font color on bottom bar */
-	fg = win_res(db, RES_CLASS ".foreground", "#7d7d80");	/* color of bottom bar */
-	red = win_res(db, RES_CLASS ".czerwonyKolor","#ff0000");	/* color red */
+	//bg = win_res(db, RES_CLASS ".background", "black");		/* background and font color on bottom bar */
+	//fg = win_res(db, RES_CLASS ".foreground", "#7d7d80");	/* color of bottom bar */
+	//red = win_res(db, RES_CLASS ".czerwonyKolor","#ff0000");	/* color red */
 	win_alloc_color(e, MARK_COLOR,   &win->markcol);
-	win_alloc_color(e, bg, &win->bg);
-	win_alloc_color(e, fg, &win->fg);
-	win_alloc_color(e, red, &win->red);					/* red color added */
+	win_alloc_color(e, BG_COLOR,   &win->bg);
+	win_alloc_color(e, BAR_COLOR,   &win->fg);
+	//win_alloc_color(e, bg, &win->bg);
+	//win_alloc_color(e, fg, &win->fg);
+	win_alloc_color(e, RED, &win->red);
 	win_alloc_color(e, SEL_COLOR, &win->selcol);
 
 	win->bar.l.size = BAR_L_LEN;
