@@ -467,7 +467,7 @@ bool ci_change_mode(arg_t n)
     if (n == 1) {
         opt = "navigate";
 	    img_fit_win(&img, SCALE_FIT);
-	    fprintf(stderr, "SET IMAGE:SCALE_FIT");
+	    fprintf(stderr, "SET IMAGE:SCALE_FIT\n");
     }
 	fprintf(stderr, "SET MODE:%s\n",opt);
     return true;

@@ -372,36 +372,27 @@ void read_tags(void)
 close_info();
 	int pfd[2];
 	int status;
-	//char w[12], h[12];
     //this is path to script that can get tags but this whole thing is not working yet
-	char *cmd = "/root/test.sh";
+	char *cmd = "/root/.config/sxiv/exec/get-tags.sh";
 	//fprintf(stderr,"cmd --> %s\n",cmd);
 	//fprintf(stderr, "test if cmd exists -> %d\n",access(cmd, X_OK)); 
 		if (access(cmd, X_OK) != 0) {
-		fprintf(stderr,"nie istnieje %s\n",cmd);
-		fprintf(stderr,"exit\n");
-		return;
+		    fprintf(stderr,"nie istnieje %s\n",cmd);
+		    fprintf(stderr,"exit\n");
+		    return;
 		}
 	info.fd = -1;
 
 		//fprintf(stderr,"wykonauje bo plik cmd isnieje \n");
 		//fprintf(stderr,"test info.fd -->  %d\n",info.fd);
-	if (info.f.err != 0 || info.fd >= 0){ // || win.bar.h == 0)
-		fprintf(stderr,"error cos jest xle koniec\n");
-		return;
-	}
-		fprintf(stderr,"continue\n");
-	win.bar.l.buf[0] = '\0';
+	fprintf(stderr,"continue\n");
 		//fprintf(stderr, "test  pfd[0] (before) %d\n",pfd[0]); 
 		//fprintf(stderr, "test  pfd[1] (before) %d\n",pfd[1]); 
 		//fprintf(stderr, "test  pfd[2] (before) %d\n",pfd[2]); 
 	if (pipe(pfd) < 0) {
-		//fprintf(stderr,"ipipe error cos jest xle koniec\n");
+		//fprintf(stderr,"pipe error cos jest zle koniec\n");
 		return;
 	}
-	//fprintf(stderr, "test  pfd[0] (after) %d\n",pfd[0]); 
-	//fprintf(stderr, "test  pfd[1] (after) %d\n",pfd[1]); 
-	//fprintf(stderr, "test  pfd[2] (after) %d\n",pfd[2]); 
 	if ((info.pid = fork()) == 0) {
 		close(pfd[0]);
 		dup2(pfd[1], 1);
@@ -422,15 +413,14 @@ close_info();
 	}
 
 	ssize_t i, n;
-	char buf[BAR_L_LEN];
-	//char *win_bar_l_buf;
-	char tags[50];
+	//char buf[BAR_L_LEN];
+	char buf[2048];
 
 	while (true) {
 		n = read(info.fd, buf, sizeof(buf));
-        fprintf(stderr,"N=%d\n",n);
-		fprintf(stderr,"moj readed  %d bytes from info.fd -> %d\n", n, info.fd);
-		//fprintf(stderr,"moj %s\n",buf);
+        fprintf(stderr,"Size of buf N=%d\n",n);
+		fprintf(stderr,"Readed %d bytes from info.fd -> %d\n", n, info.fd);
+		fprintf(stderr,"Raw: %s\n",buf);
 		if (n < 0 && errno == EAGAIN) {
 			fprintf(stderr,"koniec. N<0\n");
 			return;
@@ -439,37 +429,24 @@ close_info();
 			goto end;
 		//fprintf(stderr,"moj wykonuke --> %d\n",n);
 		for (i = 0; i < n; i++) {
-			//fprintf(stderr,"test buf[%d]  -> %d\n",i, buf[i]);
-			if (buf[i] == '\n') {
-				if (info.lastsep == 0) {
-					//win_bar_l_buf[i++] = ' ';
-					//info.lastsep = 1;
-				}
-			if (buf[i] == 0x0a) {
-			    buf[i] = 0x00;
+            //fprintf(stderr,"%02x ",buf[i]);
+			fprintf(stderr,"buf[%d] -> %02x %c\n",i, buf[i], buf[i]);
+			if ((buf[i] == 0x0a) || (buf[i] == '\n')) {
+			    fprintf(stderr,"Got new line character\n");
+	            fprintf(stderr,"Added NULL to string\n");
+			    buf[i] = 0x00;  // indicate end of string
 			    goto end;
             }
-			} else {
-				//win_bar_l_buf[i++] = buf[i];
-				//fprintf(stderr,"dobrze\n");
-				//info.lastsep = 0;
-                tags[i] = buf[i];
-			}
-			if (info.i + 1 == win.bar.l.size)
-				goto end;
 		}
 	}
 end:
-	//info.i -= info.lastsep;
-	//win_bar_l_buf[info.i] = '\0';
-	//fprintf(stderr,"odczytal: %s\n",win_bar_l_buf);  // tu jest to co cmd przekazal   image-info
-	fprintf(stderr,"odczytal: %s\n",tags);  // tu jest to co cmd przekazal   image-info
-		//win_draw_text(win, d, &win->red, 300, 300, buf, strlen(buf), w);
-    draw_tags(&win, tags);  // wyswietla to co zostalo pobrane z odmalonek komendy
+	for (i = 0; i < n; i++) {
+        fprintf(stderr,"%02x ",buf[i]);
+    }
+	fprintf(stderr,"\nbuf now: %s\n",buf);
+    draw_tags(&win, &buf);  // wyswietla tagi
 	win_draw(&win);
-	//info.fd = -1;
-	//close_info();
-		fprintf(stderr,"koniec\n");
+    fprintf(stderr,"koniec tagow\n");
 	close_info();
 }
 
@@ -1014,15 +991,15 @@ void on_buttonpress(XButtonEvent *bev)
 				}
 				break;
 			case Button4:
-			case Button3:
-                fprintf(stderr,"Button 3 pressed\n"); 
+			//case Button3:
+              //  fprintf(stderr,"Button 3 pressed\n"); 
                 //char *menu = "/root/.config/sxiv/exec/context_menu.sh";
                 //char *menu = "/root/.config/sxiv/exec/full-info.sh";
                 //const struct timespec ten_ms = {0, 100000000};
 				//nanosleep(&ten_ms, NULL);
                 //run_ext_command(menu);
 
-                break;
+                //break;
 			case Button5:
 				if (tns_scroll(&tns, bev->button == Button4 ? DIR_UP : DIR_DOWN,
 				               (bev->state & ControlMask) != 0))

@@ -14,7 +14,7 @@ static const char * const MARK_COLOR   = "#FF0000";
 static const char * const SEL_COLOR   = "#00FF00";
 static const char * const BG_COLOR   = "#000000";
 static const char * const BAR_COLOR   = "#7d7d80";
-static const char * const RED   = "#00FF00";
+static const char * const RED   = "#FF0000";
 static const char * const FONT   = "liberation-14";
 
 #endif

@@ -413,24 +413,35 @@ void show_top_bar(win_t *win)
 	//XftDrawDestroy(d);
 }
 
-void draw_tags(win_t *win, char* napisz)
+void draw_tags(win_t *win, char* tags)
 {
 	win_env_t *e;
 	e = &win->env;
-	//static GC gc;
 	XftDraw *d;
-	int w;
-	w = win->w - 2*H_TEXT_PAD;
-	fprintf(stderr,"mojafunkcja draw_tags w window.c:421");
-	XSetForeground(e->dpy, gc, win->fg.pixel);
-	XFillRectangle(win->env.dpy, win->buf.pm, gc, 0, 0, win->w, 25);
+	int x=40;
+    int y=150;
+    int j=0;
+    char tag[20];   // lets say the longest tag can be 20 characters long
+	fprintf(stderr,"mojafunkcja draw_tags w window.c:425\n");
 
-	XSetForeground(e->dpy, gc, win->red.pixel);
-	XSetForeground(e->dpy, gc, win->red.pixel);
-	//char* napis = "tu beda tagi";
-	w -= 2 * H_TEXT_PAD; /* gap between left and right parts */
-	d = XftDrawCreate(e->dpy, win->buf.pm, DefaultVisual(e->dpy, e->scr), DefaultColormap(e->dpy, e->scr));
-	win_draw_text(win, d, &win->red, 190, 200, napisz, strlen(napisz), w);
+    //fprintf(stderr,"size of tags=%d\n",strlen(tags));
+    //fprintf(stderr,"tags=%s\n",tags);
+    for (int i = 0; i < strlen(tags)+1; i++) {
+        tag[j] = tags[i];
+        j++;
+        //fprintf(stderr,"check %02x %c\n",tags[i], tags[i]);
+	    if ((tags[i] == 0x2c) || (tags[i] == 0x00)) {
+            tag[j-1]= 0x00;
+            j=0;
+            y+=20;
+            fprintf(stderr,"Display tag=%s\n",tag);
+	        XSetForeground(e->dpy, gc, win->bg.pixel);
+	        XFillRectangle(win->env.dpy, win->buf.pm, gc, x-17, y-17, 200, 23);
+            XSetForeground(e->dpy, gc, win->red.pixel);
+            d = XftDrawCreate(e->dpy, win->buf.pm, DefaultVisual(e->dpy, e->scr), DefaultColormap(e->dpy, e->scr));
+            win_draw_text(win, d, &win->red, x, y, tag, strlen(tag), 200);
+        }
+    }
 }
 
 void win_draw_bar(win_t *win)
@@ -466,8 +477,8 @@ void win_draw_bar(win_t *win)
 		x = H_TEXT_PAD;
 		w -= 2 * H_TEXT_PAD; /* gap between left and right parts */
 		win_draw_text(win, d, &win->bg, x, y, l->buf, len, w);
-		char* napis = "nowy napis:window.c:466";
-		win_draw_text(win, d, &win->red, 300, 300, napis, strlen(napis), w);
+		//char* napis = "nowy napis:window.c:466";
+		//win_draw_text(win, d, &win->red, 300, 300, napis, strlen(napis), w);
 	}
 	XftDrawDestroy(d);
 }
