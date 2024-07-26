@@ -18,6 +18,7 @@ G_CMD(change_gamma)
 G_CMD(dump_files)
 G_CMD(run_cmd)
 G_CMD(edit_tags)
+G_CMD(show_tags)
 G_CMD(del_selected)
 
 I_CMD(navigate)

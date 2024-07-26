@@ -157,10 +157,11 @@ static const keymap_t keys[] = {
 	{ ControlMask,  XK_Right,         t_move_img,	        DIR_RIGHT },
 	{ ControlMask,  XK_Left,          t_move_img,   	    DIR_LEFT },
 	{ ControlMask,  XK_Down,          t_move_img,   	    DIR_DOWN },
-	{ ControlMask,  XK_s,             g_dump_files,	        1 },
-	{ ControlMask,  XK_a,             g_dump_files,	        2 },
+	{ ControlMask,  XK_s,             g_dump_files,	        SELECTED }, //1
+	{ ControlMask,  XK_a,             g_dump_files,	        ALL_FILES }, //2
 	{ ControlMask,  XK_d,             g_del_selected,	    None },
 	{ ControlMask,	XK_Return,        g_edit_tags,		    None },
+	{ 0,            XK_backslash,     g_show_tags,		    None },
 	{ 0,			XK_t,             g_run_cmd,		    1 },
 	{ 0,        	XK_T,             g_run_cmd,		    1 },
 	{ 0,			XK_Delete,        g_run_cmd,		    2 },

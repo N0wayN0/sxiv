@@ -85,6 +85,13 @@ typedef enum {
 	FLIP_VERTICAL   = 2
 } flipdir_t;
 
+typedef enum wheel_mode { NAVIGATE, ZOOM } wh_mod;
+
+typedef enum {
+	SELECTED    = 1,
+	ALL_FILES   = 2
+} save_files;
+
 typedef enum {
 	SCALE_DOWN,
 	SCALE_FIT,

@@ -34,6 +34,7 @@ void move_img(int);
 //void edit_tags(char*);
 void run_ext_command(char*);
 void run_ext_command_current_file(char*);
+void read_tags(void);
 void load_image(int);
 bool mark_image(int, bool);
 void close_info(void);
@@ -59,12 +60,20 @@ extern int markidx;
 
 extern int prefix;
 char *opt = "navigate";
+//typedef enum wheel_mode { NAVIGATE, ZOOM } wh_mod;
+//wh_mod wheel_mode;
+wh_mod wheel_mode = NAVIGATE;
 extern bool extprefix;
 
 bool cg_edit_tags(arg_t _) {
     fprintf(stderr, "Edit tags in commands.c\n");
     //edit_tags(edittags);
     run_ext_command_current_file(edittags);
+return true;
+}
+
+bool cg_show_tags(arg_t _) {
+    read_tags();
 return true;
 }
 
@@ -179,7 +188,7 @@ bool cg_dump_files(arg_t _)
 		return -1;
 	}
 
-	if (_ == 1) {  /* only selected */
+	if (_ == SELECTED) {  /* only selected */
 		for (i = 0; i < filecnt; i++) {
 			if (files[i].flags & FF_MARK) {
 				printf("%s\n", files[i].name);
@@ -228,28 +237,6 @@ bool cg_quit(arg_t _)
 		}
 	} else printf("%s\n", files[fileidx].path);
 	exit(EXIT_SUCCESS);
-}
-
-bool xxxxcg_quit(arg_t _)
-{
-	if (markcnt > 0) {
-	    unsigned int i;
-	    unsigned int x = 0;
-        char** argv = (char**)malloc((markcnt + 2)* sizeof(char*));  // +2 is for command and NULL
-		argv[0] = "echo";
-
-        for (i = 0; i < filecnt; i++) {
-	        if (files[i].flags & FF_MARK) {
-                x += 1;
-			    argv[x] = files[i].path;
-            }
-		}
-        argv[x+1] = NULL;
-        execvp("echo", argv);
-        free(argv);
-	}
-	printf("koniec\n");
-    return true;
 }
 
 bool cg_switch_mode(arg_t _)
@@ -459,24 +446,28 @@ bool cg_change_gamma(arg_t d)
 
 bool ci_change_mode(arg_t n)
 {
-    if (opt == "navigate") 
-        opt = "zoom";
-    else 
-       opt = "navigate";
 
-    if (n == 1) {
-        opt = "navigate";
+    if (n == 1) {  // force mode navigate
+        wheel_mode = NAVIGATE;
 	    img_fit_win(&img, SCALE_FIT);
 	    fprintf(stderr, "SET IMAGE:SCALE_FIT\n");
+	    fprintf(stderr, "SET MODE:navigate\n");
+        return true;
     }
-	fprintf(stderr, "SET MODE:%s\n",opt);
+
+    // swap modes
+    if (wheel_mode == NAVIGATE) {
+        wheel_mode = ZOOM;
+	    fprintf(stderr, "SET MODE:zoom\n");
+    } else {
+        wheel_mode = NAVIGATE;
+	    fprintf(stderr, "SET MODE:navigate\n");
+    }
     return true;
 }
 
 bool ci_navigate(arg_t n)
 {
-
-	//fprintf(stderr, "PARAM:%s\n",opt);
 	if (prefix > 0)
 		n *= prefix;
 	n += fileidx;
@@ -495,8 +486,8 @@ bool ci_navigate(arg_t n)
 
 bool ci_nav_or_zoom(arg_t n)
 {
-	fprintf(stderr, "MODE:%s\n",opt);
-    if (opt == "navigate") {
+    fprintf(stderr, "WHEEL_MODE:%d\n",wheel_mode);
+    if (wheel_mode == NAVIGATE) {
         ci_navigate(n);
     } else { 
 	    //reverse to make wheel up makes zoom in

@@ -435,9 +435,10 @@ void draw_tags(win_t *win, char* tags)
             j=0;
             y+=20;
             fprintf(stderr,"Display tag=%s\n",tag);
-	        XSetForeground(e->dpy, gc, win->bg.pixel);
+	        //XSetForeground(e->dpy, gc, win->bg.pixel);
+	        //XSetBackground(e->dpy, gc, win->bg.pixel);
 	        XFillRectangle(win->env.dpy, win->buf.pm, gc, x-17, y-17, 200, 23);
-            XSetForeground(e->dpy, gc, win->red.pixel);
+            //XSetForeground(e->dpy, gc, win->red.pixel);
             d = XftDrawCreate(e->dpy, win->buf.pm, DefaultVisual(e->dpy, e->scr), DefaultColormap(e->dpy, e->scr));
             win_draw_text(win, d, &win->red, x, y, tag, strlen(tag), 200);
         }

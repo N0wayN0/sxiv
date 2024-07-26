@@ -282,10 +282,14 @@ close_info();
         }
 	}
     argv[x+1] = NULL;
+    argv[x+2] = NULL;
+    argv[x+3] = NULL;
 	} else {
         fprintf(stderr, "single file\n");
 	    argv[1] = files[fileidx].path;
         argv[2] = NULL;
+        argv[3] = NULL;
+        argv[4] = NULL;
     }
 
 	printf("array loaded\n");
