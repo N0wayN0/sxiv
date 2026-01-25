@@ -86,6 +86,13 @@ const char* win_res(XrmDatabase db, const char *name, const char *def)
 	}
 }
 
+void set_color_for_bg(win_t *win, const char *color)
+{
+	win_env_t *e;
+	e = &win->env;
+	win_alloc_color(e, color,  &win->bg);
+}
+
 #define INIT_ATOM_(atom) \
 	atoms[ATOM_##atom] = XInternAtom(e->dpy, #atom, False);
 

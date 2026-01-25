@@ -1,4 +1,4 @@
 
 *.o
 sxiv
-
+./exec/quick_tags.sh

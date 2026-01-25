@@ -10,12 +10,12 @@ enum {
  * 'font' X resource properties.
  * See X(7) section Resources and xrdb(1) for more information.
  */
-static const char * const MARK_COLOR   = "#FF0000";
-static const char * const SEL_COLOR   = "#00FF00";
-static const char * const BG_COLOR   = "#000000";
-static const char * const BAR_COLOR   = "#7d7d80";
-static const char * const RED   = "#FF0000";
-static const char * const FONT   = "liberation-14";
+static const char * const MARK_COLOR = "#FF0000";
+static const char * const SEL_COLOR = "#00FF00";
+static const char * const BG_COLOR = "#000000";
+static const char * const BAR_COLOR = "#7d7d80";
+static const char * const RED = "#FF0000";
+static const char * const FONT = "liberation-14";
 
 #endif
 #ifdef _IMAGE_CONFIG
@@ -49,7 +49,7 @@ static const bool ANTI_ALIAS = true;
 /* if true, use a checkerboard background for alpha layer,
  * toggled with 'A' key binding
  */
-static const bool ALPHA_LAYER = false;
+static const bool ALPHA_LAYER = true;
 
 #endif
 #ifdef _THUMBS_CONFIG
@@ -67,10 +67,10 @@ static const int THUMB_SIZE = 3;
 static const keymap_t keys[] = {
 	/* modifiers    key               function              argument */
 	{ 0,            XK_q,             g_quit,               None },
-	{ 0,            XK_Escape,        g_quit,               None },
 	{ 0,            XK_Return,        g_switch_mode,        None },
 	{ 0,            XK_f,             g_toggle_fullscreen,  None },
 	{ 0,            XK_b,             g_toggle_bar,         None },
+	{ ControlMask,  XK_b,             g_set_bg_color,       None },
 	{ ControlMask,  XK_x,             g_prefix_external,    None },
 	{ 0,            XK_Home,            g_first,              None },
 	//{ 0,            XK_g,             g_first,              None },
@@ -91,7 +91,7 @@ static const keymap_t keys[] = {
 	{ 0,            XK_minus,         g_zoom,               -1 },
 	{ 0,            XK_KP_Subtract,   g_zoom,               -1 },
 	{ 0,            XK_m,             g_toggle_image_mark,  None },
-	{ 0,            XK_M,             g_mark_range,         None },
+	// { 0,            XK_M,             g_mark_range,         None },
 	{ ControlMask,  XK_m,             g_reverse_marks,      None },
 	{ ControlMask,  XK_u,             g_unmark_all,         None },
 	{ 0,            XK_period,        g_navigate_marked,    +1 },
@@ -159,11 +159,12 @@ static const keymap_t keys[] = {
 	{ ControlMask,  XK_Down,          t_move_img,   	    DIR_DOWN },
 	{ ControlMask,  XK_s,             g_dump_files,	        SELECTED }, //1
 	{ ControlMask,  XK_a,             g_dump_files,	        ALL_FILES }, //2
+	{ ControlMask,  XK_e,             i_set_mode_extractor,	None },
+	{ ControlMask,  XK_t,             i_set_mode_taging,    None },
 	{ ControlMask,  XK_d,             g_del_selected,	    None },
 	{ ControlMask,	XK_Return,        g_edit_tags,		    None },
 	{ 0,            XK_backslash,     g_show_tags,		    None },
-	{ 0,			XK_t,             g_run_cmd,		    1 },
-	{ 0,        	XK_T,             g_run_cmd,		    1 },
+	{ 0,            XK_t,             g_run_cmd,		    1 },
 	{ 0,			XK_Delete,        g_run_cmd,		    2 },
 	{ 0,			XK_o,             g_run_cmd,		    3 },
 	{ 0,			XK_S,             g_run_cmd,		    4 },

@@ -32,6 +32,7 @@ void move_one_image(int, int);
 void move_img(int);
 //void edit_tags(void);
 //void edit_tags(char*);
+void set_color_for_bg(win_t*,const char*);
 void run_ext_command(char*);
 void run_ext_command_current_file(char*);
 void read_tags(void);
@@ -64,6 +65,8 @@ char *opt = "navigate";
 //wh_mod wheel_mode;
 wh_mod wheel_mode = NAVIGATE;
 extern bool extprefix;
+extern bool extractor;
+extern bool quicktags;
 
 bool cg_edit_tags(arg_t _) {
     fprintf(stderr, "Edit tags in commands.c\n");
@@ -271,6 +274,15 @@ bool cg_toggle_fullscreen(arg_t _)
 	return false;
 }
 
+bool cg_set_bg_color(arg_t _)
+{
+    static const char * const RED = "#FF0000";
+	set_color_for_bg(&win, RED);
+	load_image(fileidx);
+    redraw();
+    return false;
+}
+
 bool cg_toggle_bar(arg_t _)
 {
 	win_toggle_bar(&win);
@@ -289,6 +301,22 @@ bool cg_toggle_bar(arg_t _)
 bool cg_prefix_external(arg_t _)
 {
 	extprefix = true;
+	return false;
+}
+
+bool ci_set_mode_extractor(arg_t _)
+{
+	extractor = true;
+    //cg_unmark_all();
+    fprintf(stderr, "SET MODE: Extractor\n");
+	return false;
+}
+
+bool ci_set_mode_taging(arg_t _)
+{
+	quicktags = true;
+    //cg_unmark_all();
+    fprintf(stderr, "SET MODE: Quick Taging\n");
 	return false;
 }
 

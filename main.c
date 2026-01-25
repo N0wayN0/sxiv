@@ -20,6 +20,10 @@
 #define _MAPPINGS_CONFIG
 #include "config.h"
 
+// For mem_dump()
+#include <stdio.h>
+#include <ctype.h>
+
 #include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>
@@ -49,6 +53,7 @@ void cg_quit(void);     // dodalem bo jua tutaj uzywam a ona jest w commands.c
 void clear_resize(void);
 void show_top_bar(); // dodalem bo ta funkcje uzywam tutaj a ona jest w window.c
 void draw_tags(); // dodalem bo ta funkcje uzywam tutaj a ona jest w window.c
+//void cg_unmark_all();
 appmode_t mode;
 arl_t arl;
 img_t img;
@@ -63,6 +68,10 @@ int markidx;
 
 int prefix;
 bool extprefix;
+bool extractor;
+bool quicktags;
+const char * FILE_EXTRACTOR = "extractor.sh";
+const char * QUICK_TAGS = "quick_tags.sh";
 
 bool resized = false;
 bool top_edge = false;
@@ -257,6 +266,172 @@ void close_info(void)
 	}
 }
 
+char *get_path_to_exec(const char *name) {
+    //fprintf(stderr, "script is: %s\n",name);
+	const char *homedir, *dsuffix = "";
+    static char cmd[1024];
+	int n;
+	if ((homedir = getenv("XDG_CONFIG_HOME")) == NULL || homedir[0] == '\0') {
+		homedir = getenv("HOME");
+		dsuffix = "/.config";
+        //fprintf(stderr, "Home is: %s\n",homedir);
+        //fprintf(stderr, "desufix is: %s\n",dsuffix);
+	}
+	if (homedir != NULL) {
+        n = strlen(homedir) + strlen(dsuffix) + strlen(name) + 12;
+        //fprintf(stderr, "Length of command: %d\n",n);
+        snprintf(cmd, n, "%s%s/sxiv/exec/%s", homedir, dsuffix, name);
+        fprintf(stderr, "cmd: %s\n",cmd);
+    }
+	//fprintf(stderr, "test if cmd exists -> %d\n",access(cmd, X_OK)); 
+    return cmd;
+}
+
+void mem_dump(const void *ptr, size_t size, const char *title) {
+    const unsigned char *bytes = (const unsigned char *)ptr;
+    
+    // Optional title
+    if (title != NULL) {
+        printf("\n=== %s ===\n", title);
+    }
+    
+    // Header: Address and size
+    printf("Address: %p | Size: %zu bytes\n\n", ptr, size);
+    
+    // Process memory in 16-byte rows (standard hex dump format)
+    for (size_t offset = 0; offset < size; offset += 16) {
+        // 1. Print address at start of each line
+        printf("%08zX: ", offset);
+        
+        // 2. HEX VIEW: Print 16 bytes as hex values
+        for (size_t i = 0; i < 16; i++) {
+            size_t current_pos = offset + i;
+            
+            if (current_pos < size) {
+                // Actual byte value
+                printf("%02X ", bytes[current_pos]);
+            } else {
+                // Padding for incomplete last line
+                printf("   ");
+            }
+            
+            // Add extra space every 8 bytes (standard hex dump format)
+            if (i == 7) {
+                printf(" ");
+            }
+        }
+        
+        // 3. ASCII VIEW: Print readable characters
+        printf(" |");
+        for (size_t i = 0; i < 16; i++) {
+            size_t current_pos = offset + i;
+            
+            if (current_pos < size) {
+                unsigned char c = bytes[current_pos];
+                // Show printable chars, dots for non-printable
+                printf("%c", isprint(c) ? c : '.');
+            } else {
+                printf(" ");  // Padding
+            }
+        }
+        printf("|\n");
+    }
+}
+
+void run_special_mode(const char *key, unsigned int mask, const char *name)
+{
+   fprintf(stderr, "Running %s\n",name);
+
+	pid_t pid;
+	FILE *pfs;
+	bool marked = mode == MODE_THUMB && markcnt > 0;
+	bool changed = false;
+	int f, i, pfd[2];
+	int fcnt = marked ? markcnt : 1;
+	char kstr[32];
+	struct stat *oldst, st;
+
+	//char *name = "extractor.sh";
+	char *cmd = get_path_to_exec(name);
+	fprintf(stderr, "test if cmd exists -> %d\n",access(cmd, X_OK)); 
+		if (access(cmd, X_OK) != 0) {
+		    fprintf(stderr,"nie istnieje %s\n",cmd);
+		    fprintf(stderr,"exit\n");
+		    return;
+		}
+	if (key == NULL)
+		return;
+
+	if (pipe(pfd) < 0) {
+		error(0, errno, "pipe");
+		return;
+	}
+	if ((pfs = fdopen(pfd[1], "w")) == NULL) {
+		error(0, errno, "open pipe");
+		close(pfd[0]), close(pfd[1]);
+		return;
+	}
+	oldst = emalloc(fcnt * sizeof(*oldst));
+
+	close_info();
+	strncpy(win.bar.l.buf, "Running key handler...", win.bar.l.size);
+	win_draw(&win);
+	win_set_cursor(&win, CURSOR_WATCH);
+
+	snprintf(kstr, sizeof(kstr), "%s",key);
+
+	if ((pid = fork()) == 0) {
+		close(pfd[1]);
+		dup2(pfd[0], 0);
+		execl(cmd, cmd, kstr, NULL);
+		error(EXIT_FAILURE, errno, "exec: %s", cmd);
+	}
+	close(pfd[0]);
+	if (pid < 0) {
+		error(0, errno, "fork");
+		fclose(pfs);
+		goto end;
+	}
+
+	for (f = i = 0; f < fcnt; i++) {
+		if ((marked && (files[i].flags & FF_MARK)) || (!marked && i == fileidx)) {
+			stat(files[i].path, &oldst[f]);
+			fprintf(pfs, "%s\n", files[i].name);
+			f++;
+		}
+	}
+	fclose(pfs);
+	while (waitpid(pid, NULL, 0) == -1 && errno == EINTR);
+
+	for (f = i = 0; f < fcnt; i++) {
+		if ((marked && (files[i].flags & FF_MARK)) || (!marked && i == fileidx)) {
+			if (stat(files[i].path, &st) != 0 ||
+				  memcmp(&oldst[f].st_mtime, &st.st_mtime, sizeof(st.st_mtime)) != 0)
+			{
+				if (tns.thumbs != NULL) {
+					tns_unload(&tns, i);
+					tns.loadnext = MIN(tns.loadnext, i);
+				}
+				changed = true;
+			}
+			f++;
+		}
+	}
+
+end:
+	if (mode == MODE_IMAGE) {
+		if (changed) {
+			img_close(&img, true);
+			load_image(fileidx);
+		} else {
+			open_info();
+		}
+	}
+	free(oldst);
+	reset_cursor();
+	redraw();
+}
+
 // run external commannd on selected files
 void run_ext_command(char *cmd)
 {
@@ -278,15 +453,17 @@ close_info();
     for (i = 0; i < filecnt; i++) {
 	    if (files[i].flags & FF_MARK) {
             x += 1;
-		    argv[x] = files[i].path;
+		    argv[x] = (char*)files[i].path;
         }
 	}
+    fprintf(stderr, "done: \n");
     argv[x+1] = NULL;
     argv[x+2] = NULL;
     argv[x+3] = NULL;
+    fprintf(stderr, "done: \n");
 	} else {
         fprintf(stderr, "single file\n");
-	    argv[1] = files[fileidx].path;
+	    argv[1] = (char*)files[fileidx].path;
         argv[2] = NULL;
         argv[3] = NULL;
         argv[4] = NULL;
@@ -319,15 +496,18 @@ close_info();
 	}
 	close(pfd[1]);
 	wait(&status);
-	if (info.pid < 0) {
+	if (info.pid > 0) {
 		close(pfd[0]);
-	} else {
-		fcntl(pfd[0], F_SETFL, O_NONBLOCK);
-		info.fd = pfd[0];
-		info.i = info.lastsep = 0;
+        fprintf(stderr, "if block\n");
+	//} else {
+	//	fcntl(pfd[0], F_SETFL, O_NONBLOCK);
+	//	info.fd = pfd[0];
+	//	info.i = info.lastsep = 0;
+    //    fprintf(stderr, "else non block\n");
 	}
-    free(argv);
+    //free(*argv);
     fprintf(stderr, "koniec fork. free array\n");
+	redraw();
 }
 
 void run_ext_command_current_file(char *cmd)
@@ -409,6 +589,7 @@ close_info();
 	wait(&status);
 	if (info.pid < 0) {
 		close(pfd[0]);
+		fprintf(stderr,"test if block\n");
 	} else {
 		fcntl(pfd[0], F_SETFL, O_NONBLOCK);
 		info.fd = pfd[0];
@@ -422,9 +603,9 @@ close_info();
 
 	while (true) {
 		n = read(info.fd, buf, sizeof(buf));
-        fprintf(stderr,"Size of buf N=%d\n",n);
-		fprintf(stderr,"Readed %d bytes from info.fd -> %d\n", n, info.fd);
-		fprintf(stderr,"Raw: %s\n",buf);
+        //fprintf(stderr,"Size of buf N=%d\n",n);
+		//fprintf(stderr,"Readed %d bytes from info.fd -> %d\n", n, info.fd);
+		//fprintf(stderr,"Raw: %s\n",buf);
 		if (n < 0 && errno == EAGAIN) {
 			fprintf(stderr,"koniec. N<0\n");
 			return;
@@ -434,7 +615,7 @@ close_info();
 		//fprintf(stderr,"moj wykonuke --> %d\n",n);
 		for (i = 0; i < n; i++) {
             //fprintf(stderr,"%02x ",buf[i]);
-			fprintf(stderr,"buf[%d] -> %02x %c\n",i, buf[i], buf[i]);
+			//fprintf(stderr,"buf[%d] -> %02x %c\n",i, buf[i], buf[i]);
 			if ((buf[i] == 0x0a) || (buf[i] == '\n')) {
 			    fprintf(stderr,"Got new line character\n");
 	            fprintf(stderr,"Added NULL to string\n");
@@ -680,14 +861,17 @@ void cursor_track()
 		fprintf(stderr,"xxxx ooodddppppaaallllaa  xxxx\n"); 
 		read_tags();
 	}
-	if ((x < 43) && (left_edge == false)) {  // jest z lewej
+	if ((x < 43) && (left_edge == true)) {  // jest z lewej
 		fprintf(stderr,"pokazuje tagi bo cursor jest z lewej strony\n"); 
 		read_tags();
         //char *menu = "/root/.config/sxiv/exec/context_menu.sh ";
         //run_ext_command(menu);
 		left_edge = true;
 	}
-	if ((x > 43) && (left_edge == true)) {  // jest z lewej
+	if ((x < 95) && (left_edge == false)) {  // jest z lewej
+		fprintf(stderr,"cursor jest teraz z lewej strony\n"); 
+        run_ext_command_current_file("/root/.config/sxiv/exec/side-panel.sh");
+        //run_ext_command_current_file(fullinfo);
 		left_edge = false;
 	}
 	if ((top_edge == true ) && ( x > win.w-10 ) && (x < win.w )) {  // jest na napisie
@@ -899,9 +1083,47 @@ void on_keypress(XKeyEvent *kev)
 		return;
 	if (ksym == XK_Escape && MODMASK(kev->state) == 0) {
 		extprefix = False;
+        extractor = False;
+        quicktags = False;
+		fprintf(stderr,"SET MODE: Normal\n"); 
 	} else if (extprefix) {
 		run_key_handler(XKeysymToString(ksym), kev->state & ~sh);
 		extprefix = False;
+    } else if (extractor) {
+		fprintf(stderr,"MODE: Extractor\n"); 
+		fprintf(stderr,"Key: %x\n",key); 
+	    if ((key >= '0' && key <= '9') || (key >= 'a' && key <= 'z')) {
+		    //fprintf(stderr,"run extractor: %x\n",key); 
+		    run_special_mode(XKeysymToString(ksym), kev->state & ~sh, FILE_EXTRACTOR);
+        }
+		else if (ksym == XK_space || ksym == XK_Next) {
+		    fprintf(stderr,"Extractor: next\n"); 
+            load_image(fileidx+1);
+            redraw();
+        }
+		else if (ksym == XK_BackSpace || ksym == XK_Prior) {
+		    fprintf(stderr,"Extractor: prev\n"); 
+            load_image(fileidx-1);
+            redraw();
+        }
+    } else if (quicktags) {
+		fprintf(stderr,"MODE: Quicktags\n"); 
+		fprintf(stderr,"Key: %x\n",key); 
+	    if ((key >= '0' && key <= '9') || (key >= 'a' && key <= 'z')) {
+		    //fprintf(stderr,"run extractor: %x\n",key); 
+		    run_special_mode(XKeysymToString(ksym), kev->state & ~sh, QUICK_TAGS);
+        }
+		else if (ksym == XK_space || ksym == XK_Next) {
+		    fprintf(stderr,"Quicktags: next\n"); 
+            load_image(fileidx+1);
+            redraw();
+        }
+		else if (ksym == XK_BackSpace || ksym == XK_Prior) {
+		    fprintf(stderr,"Quicktags: prev\n"); 
+            load_image(fileidx-1);
+            redraw();
+        }
+
 	} else if (key >= '0' && key <= '9') {
 		/* number prefix for commands */
 		prefix = prefix * 10 + (int) (key - '0');
