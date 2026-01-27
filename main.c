@@ -712,6 +712,29 @@ end:
 	close_info();
 }
 
+
+int find_target_index()
+{
+    const char *target = getenv("SXIV_TARGET");
+    int idx = 0;
+    if (target) {
+	    //fprintf(stderr,"Target: %s\n",target);
+        //mem_dump(target,50,"siema");
+        //mem_dump(files,50,"siema");
+	    //fprintf(stderr,"Filecnt: %d\n",filecnt);
+        for (int i = 0; i < filecnt; i++) {
+	        //fprintf(stderr,"Check: %s\n",files[i].path);
+            if (strcmp(files[i].path, target) == 0) {
+	            //fprintf(stderr,"Found: %s\n",files[i].path);
+	            //fprintf(stderr,"Fileidx: %d\n",i);
+                idx = i;
+                break;
+            }
+        }
+    }
+    return idx;
+}
+
 void load_image(int new)
 {
 	bool prev = new < fileidx;
@@ -1450,6 +1473,10 @@ int main(int argc, char **argv)
 
 	filecnt = fileidx;
 	fileidx = options->startnum < filecnt ? options->startnum : 0;
+   
+    if (fileidx == 0) {
+        fileidx = find_target_index();
+    }
 
 	for (i = 0; i < ARRLEN(buttons); i++) {
 		if (buttons[i].cmd == i_cursor_navigate) {
