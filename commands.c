@@ -148,6 +148,24 @@ bool ct_move_img(arg_t direction)
 	return true;
 }
 
+bool cg_make_index(arg_t _)
+{
+	unsigned int i = 1;
+	FILE *fh;
+	char filename[20] = "index.idx";
+	fh=fopen(filename, "w");
+	if (fh == NULL) {
+		fprintf(stderr, "%s : couldn't open.", filename);
+		return -1;
+	}
+    for (i = 0; i < filecnt; i++) {
+        //printf("%s\n", files[i].name);
+        fprintf(fh, "%s\n", files[i].name);
+    }
+	fclose(fh);
+
+	return true;
+}
 
 bool cg_dump_files(arg_t _)
 {

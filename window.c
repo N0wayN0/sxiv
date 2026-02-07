@@ -135,7 +135,11 @@ void win_init(win_t *win)
 	//win_alloc_color(e, bg, &win->bg);
 	//win_alloc_color(e, fg, &win->fg);
 	win_alloc_color(e, RED, &win->red);
-	win_alloc_color(e, SEL_COLOR, &win->selcol);
+	win_alloc_color(e, GREEN, &win->green);
+	win_alloc_color(e, BLUE, &win->blue);
+	win_alloc_color(e, YELLOW, &win->yellow);
+	win_alloc_color(e, ORANGE, &win->orange);
+	win_alloc_color(e, GRAY, &win->gray);
 
 	win->bar.l.size = BAR_L_LEN;
 	win->bar.r.size = BAR_R_LEN;
@@ -251,7 +255,9 @@ void win_open(win_t *win)
 	}
 	free(icon_data);
 
-	win_set_title(win, "sxiv");
+    const char *title = getenv("SXIV_TITLE");
+	//win_set_title(win, "sxiv");
+	win_set_title(win, title ? title : "sxiv");
 
 	classhint.res_class = RES_CLASS;
 	classhint.res_name = options->res_name != NULL ? options->res_name : "sxiv";
@@ -420,35 +426,53 @@ void show_top_bar(win_t *win)
 	//XftDrawDestroy(d);
 }
 
+void win_show_panel(win_t *win, int x, int y, int width, int height)
+{
+	fprintf(stderr,"mojafunkcja win_show_panel w window.c:427\n");
+	win_env_t *e;
+	e = &win->env;
+	XSetForeground(e->dpy, gc, win->gray.pixel);
+	XFillRectangle(win->env.dpy, win->buf.pm, gc, x, y, width, height);
+}
+
+void draw_data(win_t *win, char* data, int x, int y)
+{
+	win_env_t *e;
+	e = &win->env;
+	XftDraw *d;
+	//int x=40;
+    //int y=150;
+    d = XftDrawCreate(e->dpy, win->buf.pm, DefaultVisual(e->dpy, e->scr), DefaultColormap(e->dpy, e->scr));
+    win_draw_text(win, d, &win->red, x, y, data, strlen(data), 1200);
+
+}
+
 void draw_tags(win_t *win, char* tags)
 {
 	win_env_t *e;
 	e = &win->env;
 	XftDraw *d;
 	int x=40;
-    int y=150;
+    int y=300;
     int j=0;
-    char tag[20];   // lets say the longest tag can be 20 characters long
-	fprintf(stderr,"mojafunkcja draw_tags w window.c:425\n");
+    char tag[30];   // lets say the longest tag can be 30 characters long
+	fprintf(stderr,"mojafunkcja draw_tags w window.c\n");
 
     //fprintf(stderr,"size of tags=%d\n",strlen(tags));
     //fprintf(stderr,"tags=%s\n",tags);
     for (int i = 0; i < strlen(tags)+1; i++) {
         tag[j] = tags[i];
-        j++;
         //fprintf(stderr,"check %02x %c\n",tags[i], tags[i]);
-	    if ((tags[i] == 0x2c) || (tags[i] == 0x00)) {
-            tag[j-1]= 0x00;
-            j=0;
+	    if ((tags[i] == 0x2c) || (tags[i] == 0x00)) {  // , or \n
+            tag[j]= 0x00;   // trerminate string
+            j=-1;
             y+=20;
             fprintf(stderr,"Display tag=%s\n",tag);
-	        //XSetForeground(e->dpy, gc, win->bg.pixel);
-	        //XSetBackground(e->dpy, gc, win->bg.pixel);
-	        XFillRectangle(win->env.dpy, win->buf.pm, gc, x-17, y-17, 200, 23);
-            //XSetForeground(e->dpy, gc, win->red.pixel);
+	        XFillRectangle(win->env.dpy, win->buf.pm, gc, x-17, y-17, 300, 23);
             d = XftDrawCreate(e->dpy, win->buf.pm, DefaultVisual(e->dpy, e->scr), DefaultColormap(e->dpy, e->scr));
             win_draw_text(win, d, &win->red, x, y, tag, strlen(tag), 200);
         }
+        j++;
     }
 }
 

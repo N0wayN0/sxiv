@@ -49,11 +49,15 @@ void redraw(void);
 void reset_cursor(void);
 void animate(void);
 void slideshow(void);
-void cg_quit(void);     // dodalem bo jua tutaj uzywam a ona jest w commands.c
 void clear_resize(void);
-void show_top_bar(); // dodalem bo ta funkcje uzywam tutaj a ona jest w window.c
-void draw_tags(); // dodalem bo ta funkcje uzywam tutaj a ona jest w window.c
+
+void cg_quit(void);     // dodalem bo ja tutaj uzywam a ona jest w commands.c
+void show_top_bar();    // ona jest w window.c
+void draw_tags();       // jest w window.c
+void win_show_panel();  // jest w window.c
+void draw_data();       // jest w window.c
 //void cg_unmark_all();
+
 appmode_t mode;
 arl_t arl;
 img_t img;
@@ -72,6 +76,7 @@ bool extractor;
 bool quicktags;
 const char * FILE_EXTRACTOR = "extractor.sh";
 const char * QUICK_TAGS = "quick_tags.sh";
+const char * GET_TAGS = "get-tags.sh";
 
 bool resized = false;
 bool top_edge = false;
@@ -118,6 +123,7 @@ void cleanup(void)
 void check_add_file(char *filename, bool given)
 {
 	char *path;
+    struct stat fileInfo;
 
 	if (*filename == '\0')
 		return;
@@ -140,6 +146,19 @@ void check_add_file(char *filename, bool given)
 	files[fileidx].path = path;
 	if (given)
 		files[fileidx].flags |= FF_WARN;
+    
+    if (stat(path, &fileInfo) == 0) {
+	    //fprintf(stderr,"C_Time: %s",ctime(&fileInfo.st_mtime));
+        //fprintf(stderr,"M_Time: %s",ctime(&fileInfo.st_mtime));
+        //fprintf(stderr,"Size: %ld\n",(long)fileInfo.st_size);
+        //fprintf(stderr,"index: %d :",fileidx);
+        //fprintf(stderr,"index: %s\n",path);
+        files[fileidx].ctime = fileInfo.st_ctime;
+        files[fileidx].mtime = fileInfo.st_mtime;
+        files[fileidx].size = fileInfo.st_size;
+        files[fileidx].asloaded = fileidx;
+        files[fileidx].fromindex = -1;
+    }
 	fileidx++;
 }
 
@@ -150,20 +169,14 @@ void move_one_image(int n, int direction)
     
     if (direction == DIR_LEFT) {
         fprintf(stderr, "MOVE:Direction LEFT\n");
-        files[filecnt+1] = files[n-1];	/* wczesniejszy zapisuje do tempa */
+        fileinfo_t temp = files[n-1];	/* wczesniejszy zapisuje do tempa */
         files[n-1] = files[n];			/* przesuwa zaznaczony w jedo miejsce */
-        files[n] = files[filecnt+1];	/* z tempa wstawia na miejsce zaznaczonego */
+        files[n] = temp             ;	/* z tempa wstawia na miejsce zaznaczonego */
     } else if (direction == DIR_RIGHT) {
         fprintf(stderr, "MOVE:Direction RIGHT\n");
-        files[filecnt+1] = files[n+1];	/* nastepny zapisuje do tempa */
+        fileinfo_t temp = files[n+1];	/* nastepny zapisuje do tempa */
         files[n+1] = files[n];			/* przesuwa zaznaczony w jedo miejsce */
-        files[n] = files[filecnt+1];	/* z tempa wstawia na miejsce zaznaczonego */
-    } else if (direction == DIR_DOWN) {
-        fprintf(stderr, "MOVE:Direction DOWN\n");
-        files[n+1].path = "/root/Downloads/0463824149471c93734b21551a6d6b4b.jpg";
-        //files[filecnt+1] = files[n+5];	/* nastepny zapisuje do tempa */
-        ///files[n+5] = files[n];			/* przesuwa zaznaczony w jedo miejsce */
-        //files[n] = files[filecnt+1];	/* z tempa wstawia na miejsce zaznaczonego */
+        files[n] = temp;	            /* z tempa wstawia na miejsce zaznaczonego */
     }
     return; 
 
@@ -556,15 +569,13 @@ void read_tags(void)
 close_info();
 	int pfd[2];
 	int status;
-    //this is path to script that can get tags but this whole thing is not working yet
-	char *cmd = "/root/.config/sxiv/exec/get-tags.sh";
+	char *cmd = get_path_to_exec(GET_TAGS);
 	//fprintf(stderr,"cmd --> %s\n",cmd);
-	//fprintf(stderr, "test if cmd exists -> %d\n",access(cmd, X_OK)); 
-		if (access(cmd, X_OK) != 0) {
-		    fprintf(stderr,"nie istnieje %s\n",cmd);
-		    fprintf(stderr,"exit\n");
-		    return;
-		}
+    if (access(cmd, X_OK) != 0) {
+        fprintf(stderr,"Not exists: %s\n",cmd);
+        fprintf(stderr,"exit\n");
+        return;
+    }
 	info.fd = -1;
 
 		//fprintf(stderr,"wykonauje bo plik cmd isnieje \n");
@@ -715,24 +726,113 @@ end:
 
 int find_target_index()
 {
+    fprintf(stderr,"Finding target file\n");
     const char *target = getenv("SXIV_TARGET");
     int idx = 0;
+    //char *full[PATH_MAX];
+    //realpath(target, full);
     if (target) {
-	    //fprintf(stderr,"Target: %s\n",target);
+	    fprintf(stderr,"Target: %s\n",target);
+        char *fullpath = realpath(target,NULL);
+	    fprintf(stderr,"Full: %s\n",fullpath);
+        if (!fullpath) {
+	        fprintf(stderr,"Full path error\n");
+            return 0;
+        }
         //mem_dump(target,50,"siema");
         //mem_dump(files,50,"siema");
 	    //fprintf(stderr,"Filecnt: %d\n",filecnt);
         for (int i = 0; i < filecnt; i++) {
 	        //fprintf(stderr,"Check: %s\n",files[i].path);
-            if (strcmp(files[i].path, target) == 0) {
+            if (strcmp(files[i].path, fullpath) == 0) {
 	            //fprintf(stderr,"Found: %s\n",files[i].path);
-	            //fprintf(stderr,"Fileidx: %d\n",i);
+	            fprintf(stderr,"Fileidx: %d\n",i);
                 idx = i;
+                free(fullpath);
                 break;
             }
         }
     }
     return idx;
+}
+
+void load_index_file(void)
+{
+    fprintf(stderr,"Loading index file\n");
+    FILE *file = fopen("index.idx", "r");
+    if (!file) {
+        perror("error with index.idx");
+        return;
+    }
+
+    int linecnt = 0;
+	fprintf(stderr,"Found: index.idx\n");
+    char line[256];
+    while (fgets(line, sizeof(line), file)) {
+        line[strcspn(line, "\n")] = 0x00;       //strscpn returns (int) index of given char
+        for (int i = 0; i< filecnt; i++) {
+            if (strcmp(line, files[i].name) == 0) {
+                fprintf(stderr,"Order: %d  %s\n", linecnt, line);
+                fprintf(stderr,"path: %s\n", files[i].path);
+                files[i].fromindex = linecnt;
+            }
+        }
+        linecnt ++;
+    }
+    fclose(file);
+}
+
+void show_top_panel()
+{
+    char buff[80];
+    int y_coor = 100;
+    int x_coor = 40;
+    int gap = 25;
+    
+    win_show_panel(&win, 0, 0, win.w, 300);
+    const char *title = getenv("SXIV_TITLE");
+    if (!title) {
+        title = "siema";
+    }
+
+    snprintf(buff, sizeof(buff), "Collection: %s",title);
+    draw_data(&win, buff, x_coor, y_coor);
+    snprintf(buff, sizeof(buff), "Files: %d",filecnt);
+    draw_data(&win, buff, x_coor, y_coor += gap);
+    
+
+    win_draw(&win);
+
+}
+void show_left_panel()
+{
+    char buff[80];
+    int y_coor = 100;
+    int x_coor = 40;
+    int gap = 25;
+    //fprintf(stderr,"C_Time: %s",ctime(&files[fileidx].ctime));
+    //fprintf(stderr,"M_Time: %s",ctime(&files[fileidx].mtime));
+    //fprintf(stderr,"Size: %ld\n",(long)files[fileidx].size);
+    //fprintf(stderr,"As Loaded: %d\n",files[fileidx].asloaded);
+    win_show_panel(&win, 0, 0, 500, win.h);
+    snprintf(buff, sizeof(buff), "path  %s",files[fileidx].path);
+    draw_data(&win, buff, x_coor, y_coor);
+    snprintf(buff, sizeof(buff), "name  %s",files[fileidx].name);
+    draw_data(&win, buff, x_coor, y_coor += gap);
+    snprintf(buff, sizeof(buff), "cTime  %s", ctime(&files[fileidx].ctime));
+    draw_data(&win, buff, x_coor, y_coor += gap);
+    snprintf(buff, sizeof(buff), "mTime  %s", ctime(&files[fileidx].mtime));
+    draw_data(&win, buff, x_coor, y_coor += gap);
+    snprintf(buff, sizeof(buff), "size  %ld",files[fileidx].size);
+    draw_data(&win, buff, x_coor, y_coor += gap);
+    snprintf(buff, sizeof(buff), "Loaded  %d",files[fileidx].asloaded);
+    draw_data(&win, buff, x_coor, y_coor += gap);
+    snprintf(buff, sizeof(buff), "index  %d",files[fileidx].fromindex);
+    draw_data(&win, buff, x_coor, y_coor += gap);
+    
+    read_tags();
+
+    win_draw(&win);
 }
 
 void load_image(int new)
@@ -848,10 +948,11 @@ void cursor_track()
 	r->p = r->buf;
 	win_cursor_pos(&win, &x, &y);
 		//fprintf(stderr,"przed %d\n",bottom_edge); 
-       //fprintf(stderr,"Mouse motion: (%d,%d)\n", x, y);
+    //fprintf(stderr,"Mouse motion: (%d,%d)\n", x, y);
 	if (( y > win.h-20 ) && (bottom_edge == false)) { // pokazuje statusbar when mouseover
 		fprintf(stderr,"statusbar on mouseover\n"); 
-		bar_put(l, "info "); // add text on the bar l=left or r=right
+		//bar_put(l, "info "); // add text on the bar l=left or r=right
+        open_info();
 		win_toggle_bar(&win);
 		//redraw(); // nie moze tak byc bo resetuje variables np. bottom_edge
 		update_info();	// mark fileind/filecnt  on the right side of bar
@@ -868,34 +969,34 @@ void cursor_track()
 	}  // koniec statusbar when mouseover
 
 	if (( y < 20 ) && (top_edge == false)) {  // top bar when mouseover
-		fprintf(stderr,"siema\n"); 
+		fprintf(stderr,"showing top panel\n"); 
+        show_top_panel();
 		show_top_bar(&win);
-		win_draw(&win);
+    win_draw(&win);
 		top_edge = true;
 	}
-	if ((y > 20) && (top_edge == true)) {
-		fprintf(stderr,"set zero\n"); 
+	if ((y > 300) && (top_edge == true)) {
+		fprintf(stderr,"top panel set zero\n"); 
 		img.checkpan = img.dirty = true;  // potrzebne zeby img_render zadzialalo
 		img_render(&img);
 		win_draw(&win);
 		top_edge = false;
 	}
-	if ((top_edge == true ) && ( x > 308 ) && (x < 433 )) {  // jest na napisie
-		fprintf(stderr,"xxxx ooodddppppaaallllaa  xxxx\n"); 
-		read_tags();
-	}
-	if ((x < 43) && (left_edge == true)) {  // jest z lewej
-		fprintf(stderr,"pokazuje tagi bo cursor jest z lewej strony\n"); 
-		read_tags();
-        //char *menu = "/root/.config/sxiv/exec/context_menu.sh ";
-        //run_ext_command(menu);
-		left_edge = true;
-	}
-	if ((x < 95) && (left_edge == false)) {  // jest z lewej
-		fprintf(stderr,"cursor jest teraz z lewej strony\n"); 
-        run_ext_command_current_file("/root/.config/sxiv/exec/side-panel.sh");
-        //run_ext_command_current_file(fullinfo);
+	//if ((top_edge == true ) && ( x > 308 ) && (x < 433 )) {  // jest na napisie
+	//	fprintf(stderr,"xxxx ooodddppppaaallllaa  xxxx\n"); 
+	//	read_tags();
+	//}
+	if ((x > 500) && (left_edge == true)) {  // jest z lewej
+		fprintf(stderr,"left panel set zero\n"); 
+		img.checkpan = img.dirty = true;  // potrzebne zeby img_render zadzialalo
+		img_render(&img);
+		win_draw(&win);
 		left_edge = false;
+	}
+	if ((x < 45) && (left_edge == false)) {  // jest z lewej
+		fprintf(stderr,"odpala left panel\n"); 
+        show_left_panel();        
+		left_edge = true;
 	}
 	if ((top_edge == true ) && ( x > win.w-10 ) && (x < win.w )) {  // jest na napisie
 		fprintf(stderr,"odpalaa exit bo jest myszka w rogu\n"); 
@@ -1474,6 +1575,9 @@ int main(int argc, char **argv)
 	filecnt = fileidx;
 	fileidx = options->startnum < filecnt ? options->startnum : 0;
    
+    fprintf(stderr,"All files loaded: %d\n",filecnt);
+    load_index_file();
+    
     if (fileidx == 0) {
         fileidx = find_target_index();
     }

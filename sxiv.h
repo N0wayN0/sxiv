@@ -126,6 +126,11 @@ typedef struct {
 	const char *name; /* as given by user */
 	const char *path; /* always absolute */
 	fileflags_t flags;
+    time_t ctime;
+    time_t mtime;
+    off_t size;
+    int asloaded;
+    int fromindex;
 } fileinfo_t;
 
 /* timeouts in milliseconds: */
@@ -419,6 +424,11 @@ struct win {
 	XftColor bg;
 	XftColor fg;
 	XftColor red;
+	XftColor green;
+	XftColor blue;
+	XftColor yellow;
+	XftColor orange;
+	XftColor gray;
 
 	int x;
 	int y;

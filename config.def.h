@@ -15,6 +15,11 @@ static const char * const SEL_COLOR = "#00FF00";
 static const char * const BG_COLOR = "#000000";
 static const char * const BAR_COLOR = "#7d7d80";
 static const char * const RED = "#FF0000";
+static const char * const GREEN = "#00FF00";
+static const char * const BLUE = "#0000FF";
+static const char * const YELLOW = "#EFEB24";
+static const char * const ORANGE = "#E07B52";
+static const char * const GRAY = "#CDCDCD";
 static const char * const FONT = "liberation-14";
 
 #endif
@@ -158,7 +163,8 @@ static const keymap_t keys[] = {
 	{ ControlMask,  XK_Left,          t_move_img,   	    DIR_LEFT },
 	{ ControlMask,  XK_Down,          t_move_img,   	    DIR_DOWN },
 	{ ControlMask,  XK_s,             g_dump_files,	        SELECTED }, //1
-	{ ControlMask,  XK_a,             g_dump_files,	        ALL_FILES }, //2
+//	{ ControlMask,  XK_a,             g_dump_files,	        ALL_FILES }, //2
+	{ ControlMask,  XK_a,             g_make_index,	        None },
 	{ ControlMask,  XK_e,             i_set_mode_extractor,	None },
 	{ ControlMask,  XK_t,             i_set_mode_taging,    None },
 	{ ControlMask,  XK_d,             g_del_selected,	    None },
