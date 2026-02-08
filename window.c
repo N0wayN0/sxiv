@@ -130,6 +130,7 @@ void win_init(win_t *win)
 	//fg = win_res(db, RES_CLASS ".foreground", "#7d7d80");	/* color of bottom bar */
 	//red = win_res(db, RES_CLASS ".czerwonyKolor","#ff0000");	/* color red */
 	win_alloc_color(e, MARK_COLOR,   &win->markcol);
+	win_alloc_color(e, SEL_COLOR,   &win->selcol);
 	win_alloc_color(e, BG_COLOR,   &win->bg);
 	win_alloc_color(e, BAR_COLOR,   &win->fg);
 	//win_alloc_color(e, bg, &win->bg);
