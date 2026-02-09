@@ -729,16 +729,14 @@ int find_target_index()
     fprintf(stderr,"Finding target file\n");
     const char *target = getenv("SXIV_TARGET");
     int idx = 0;
-    //char *full[PATH_MAX];
-    //realpath(target, full);
     if (target) {
 	    fprintf(stderr,"Target: %s\n",target);
         char *fullpath = realpath(target,NULL);
-	    fprintf(stderr,"Full: %s\n",fullpath);
         if (!fullpath) {
 	        fprintf(stderr,"Full path error\n");
             return 0;
         }
+	    fprintf(stderr,"Full path: %s\n",fullpath);
         //mem_dump(target,50,"siema");
         //mem_dump(files,50,"siema");
 	    //fprintf(stderr,"Filecnt: %d\n",filecnt);
@@ -756,6 +754,14 @@ int find_target_index()
     return idx;
 }
 
+
+int sortbyindex(const void *a, const void *b)
+{
+	fileinfo_t *fa = (fileinfo_t *)a;
+	fileinfo_t *fb = (fileinfo_t *)b;
+    return fa->fromindex - fb->fromindex;
+}
+
 void load_index_file(void)
 {
     fprintf(stderr,"Loading index file\n");
@@ -770,7 +776,9 @@ void load_index_file(void)
     char line[256];
     while (fgets(line, sizeof(line), file)) {
         line[strcspn(line, "\n")] = 0x00;       //strscpn returns (int) index of given char
+        //fprintf(stderr,"check: %s\ ->", line);
         for (int i = 0; i< filecnt; i++) {
+            //fprintf(stderr,"%s\n", files[i].name);
             if (strcmp(line, files[i].name) == 0) {
                 fprintf(stderr,"Order: %d  %s\n", linecnt, line);
                 fprintf(stderr,"path: %s\n", files[i].path);
@@ -780,6 +788,7 @@ void load_index_file(void)
         linecnt ++;
     }
     fclose(file);
+	qsort(files, filecnt, sizeof(fileinfo_t), sortbyindex);
 }
 
 void show_top_panel()
@@ -1474,6 +1483,14 @@ void run(void)
 		}
 	}
 }
+
+//int cmp_ctime(const void *a, const void *b)
+//{
+//    const struct fileinfo_t *fa = (const fileinfo_t *)a;
+//    const struct fileinfo_t *fb = (const fileinfo_t *)b;
+//    if (fa->ctime < fb->ctime) return -1;
+//    if (fa->ctime > fb->ctime) return 0;
+//}
 
 int fncmp(const void *a, const void *b)
 {
