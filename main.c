@@ -764,7 +764,6 @@ int sortbyindex(const void *a, const void *b)
 
 void load_index_file(void)
 {
-    fprintf(stderr,"Loading index file\n");
     FILE *file = fopen("index.idx", "r");
     if (!file) {
         perror("error with index.idx");
@@ -772,22 +771,28 @@ void load_index_file(void)
     }
 
     int linecnt = 0;
-	fprintf(stderr,"Found: index.idx\n");
+	fprintf(stderr,"Found: index.idx");
     char line[256];
     while (fgets(line, sizeof(line), file)) {
         line[strcspn(line, "\n")] = 0x00;       //strscpn returns (int) index of given char
-        //fprintf(stderr,"check: %s\ ->", line);
+        const char *clear_line = line;
+        fprintf(stderr,"\nrecord[%d]: %s ->", linecnt, line);
+        if (line[0] == '.' && line[1] == '/') {
+            clear_line = line + 2;
+            fprintf(stderr," cleared: %s ->", clear_line);
+        }
         for (int i = 0; i< filecnt; i++) {
             //fprintf(stderr,"%s\n", files[i].name);
-            if (strcmp(line, files[i].name) == 0) {
-                fprintf(stderr,"Order: %d  %s\n", linecnt, line);
-                fprintf(stderr,"path: %s\n", files[i].path);
+            if (strcmp(clear_line, files[i].name + 2) == 0) {
+                fprintf(stderr,"Found. Set order: %d", linecnt);
+                //fprintf(stderr,"path: %s\n", files[i].path);
                 files[i].fromindex = linecnt;
             }
         }
         linecnt ++;
     }
     fclose(file);
+    fprintf(stderr,"\nsort by index\n");
 	qsort(files, filecnt, sizeof(fileinfo_t), sortbyindex);
 }
 
