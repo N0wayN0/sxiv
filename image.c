@@ -859,6 +859,33 @@ void img_rotate(img_t *img, degree_t d)
 	img->dirty = true;
 }
 
+void img_stretch(img_t *img, float xfactor, float yfactor)
+{
+    fprintf(stderr, "Stretch image \n");
+    fprintf(stderr, "factor X: %f\nfactor Y: %f\n", xfactor, yfactor);
+    Imlib_Image new_img;
+    int new_h, new_w;
+
+	imlib_context_set_image(img->im);
+
+    new_w = MAX(1, (int)(img->w * xfactor));
+    new_h = MAX(1, (int)(img->h * yfactor));
+    new_img = imlib_create_cropped_scaled_image(0,0, img->w, img->h, new_w, new_h);
+    imlib_free_image();
+    img->im = new_img;
+	
+    imlib_context_set_image(img->im);
+    //img->w = new_w;
+    //img->h = new_h;
+	img->w = imlib_image_get_width();
+	img->h = imlib_image_get_height();
+
+	img->scalemode = 0;  // set 100%
+	img->checkpan = true;
+	img->dirty = true;
+
+}
+
 void img_flip(img_t *img, flipdir_t d)
 {
 	int i;

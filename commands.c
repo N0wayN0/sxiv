@@ -19,17 +19,27 @@
 #include "sxiv.h"
 #define _IMAGE_CONFIG
 #include "config.h"
-#include "ext_cmds.h"
 
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <sys/wait.h>
 
+// commands used ind cg_run_cmd()
+char *delfiles = "del-file.sh";
+char *edittags = "edit-tags.sh";
+char *editmultitags = "edit-tags-multi.sh";
+char *openfolder = "open-folder.sh";
+char *spawnshell = "spawn-shell.sh";
+char *movefiles = "move-file.sh";
+char *fullinfo = "full-info.sh";
+char *menu = "context_menu.sh";
+
 // tu sa zadelkarowane funkcje ktore beda uzywane ale sa w innych plikach
 void remove_file(int, bool);
 void move_one_image(int, int);
 void move_img(int);
+void show_left_panel();
 //void edit_tags(void);
 //void edit_tags(char*);
 void set_color_for_bg(win_t*,const char*);
@@ -76,7 +86,8 @@ return true;
 }
 
 bool cg_show_tags(arg_t _) {
-    read_tags();
+    //read_tags();
+    show_left_panel();
 return true;
 }
 
@@ -654,6 +665,14 @@ bool ci_flip(arg_t dir)
 	return true;
 }
 
+bool ci_stretch(arg_t _)
+{
+    if (_ == DIR_RIGHT) img_stretch(&img, 1.01, 1.0);    // expand horizontaly
+    if (_ == DIR_LEFT) img_stretch(&img, 0.99, 1.0);     // squeeze hor
+    if (_ == DIR_DOWN) img_stretch(&img, 1.0, 1.01);     // expant verticaly
+    if (_ == DIR_UP) img_stretch(&img, 1.0, 0.99);       // squeeze ver
+	return true;
+}
 bool ci_toggle_antialias(arg_t _)
 {
 	img_toggle_antialias(&img);

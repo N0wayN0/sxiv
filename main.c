@@ -446,18 +446,16 @@ end:
 }
 
 // run external commannd on selected files
-void run_ext_command(char *cmd)
+void run_ext_command(char *name)
 {
 close_info();
     // ta funkcja musi ocenic czy sa zaznaczone pliki i odpalic multi-files opcje
     // albo jak nie sa zaznaczone to one file opcje
-    // mozna bedzie ja przerobic zeby odpalala takze del i move-files (marked or one)
-	// musi odpalic script z parametrem "cala/sciezka/do/pliku"
     fprintf(stderr, "nowa funkcja do external commands. multifile opcja \n");
-    fprintf(stderr, "cmd: %s\n",cmd);
+    fprintf(stderr, "cmd: %s\n",name);
 
     char** argv = (char**)malloc((markcnt + 2)* sizeof(char*));  // +2 is for command and NULL
-	argv[0] = cmd;
+	argv[0] = name;
 	
     if (markcnt > 0) {
     fprintf(stderr, "marked files: %d\n",markcnt);
@@ -486,6 +484,7 @@ close_info();
 
 	int pfd[2];
 	int status;
+	char *cmd = get_path_to_exec(name);
         if (access(cmd, X_OK) != 0) {
             fprintf(stderr, "no cmd exit\n");
             return;
@@ -523,7 +522,7 @@ close_info();
 	redraw();
 }
 
-void run_ext_command_current_file(char *cmd)
+void run_ext_command_current_file(char *name)
 {
 close_info();
     // cmd = "/root/.config/sxiv/exec/edit-tags.sh";
@@ -532,6 +531,7 @@ close_info();
 
 	int pfd[2];
 	int status;
+	char *cmd = get_path_to_exec(name);
     if (access(cmd, X_OK) != 0) {
         fprintf(stderr, "no cmd exit\n");
         return;
@@ -726,17 +726,15 @@ end:
 
 int find_target_index()
 {
-    fprintf(stderr,"Finding target file\n");
     const char *target = getenv("SXIV_TARGET");
     int idx = 0;
     if (target) {
-	    fprintf(stderr,"Target: %s\n",target);
         char *fullpath = realpath(target,NULL);
         if (!fullpath) {
-	        fprintf(stderr,"Full path error\n");
+	        fprintf(stderr,"Found error in target file !!!\n");
             return 0;
         }
-	    fprintf(stderr,"Full path: %s\n",fullpath);
+        fprintf(stderr,"Found target file: %s\n",fullpath);
         //mem_dump(target,50,"siema");
         //mem_dump(files,50,"siema");
 	    //fprintf(stderr,"Filecnt: %d\n",filecnt);
@@ -744,7 +742,7 @@ int find_target_index()
 	        //fprintf(stderr,"Check: %s\n",files[i].path);
             if (strcmp(files[i].path, fullpath) == 0) {
 	            //fprintf(stderr,"Found: %s\n",files[i].path);
-	            fprintf(stderr,"Fileidx: %d\n",i);
+	            fprintf(stderr,"Target idx: %d\n",i);
                 idx = i;
                 free(fullpath);
                 break;
@@ -755,11 +753,20 @@ int find_target_index()
 }
 
 
-int sortbyindex(const void *a, const void *b)
+int sort_by_index(const void *a, const void *b)
 {
 	fileinfo_t *fa = (fileinfo_t *)a;
 	fileinfo_t *fb = (fileinfo_t *)b;
     return fa->fromindex - fb->fromindex;
+}
+
+int sort_by_size(const void *a, const void *b)
+{
+	fileinfo_t *fa = (fileinfo_t *)a;
+	fileinfo_t *fb = (fileinfo_t *)b;
+    if (fb->size > fa->size) return -1;
+    if (fb->size < fa->size) return 1;
+    return 0;
 }
 
 void load_index_file(void)
@@ -793,7 +800,8 @@ void load_index_file(void)
     }
     fclose(file);
     fprintf(stderr,"\nsort by index\n");
-	qsort(files, filecnt, sizeof(fileinfo_t), sortbyindex);
+	qsort(files, filecnt, sizeof(fileinfo_t), sort_by_index);
+	//qsort(files, filecnt, sizeof(fileinfo_t), sort_by_size);
 }
 
 void show_top_panel()

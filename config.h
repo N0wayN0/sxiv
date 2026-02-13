@@ -98,7 +98,7 @@ static const keymap_t keys[] = {
 	{ 0,            XK_m,             g_toggle_image_mark,  None },
 	// { 0,            XK_M,             g_mark_range,         None },
 	{ ControlMask,  XK_m,             g_reverse_marks,      None },
-	{ ControlMask,  XK_u,             g_unmark_all,         None },
+	{ 0,            XK_u,             g_unmark_all,         None },
 	{ 0,            XK_period,        g_navigate_marked,    +1 },
 	{ 0,            XK_comma,         g_navigate_marked,    -1 },
 	{ 0,            XK_braceleft,     g_change_gamma,       -1 },
@@ -146,37 +146,41 @@ static const keymap_t keys[] = {
 	{ 0,            XK_equal,         i_set_zoom,           100 },
 	{ 0,            XK_w,             i_fit_to_win,         SCALE_DOWN },
 	{ 0,            XK_W,             i_fit_to_win,         SCALE_FIT },
-	{ ControlMask,  XK_Next,             i_fit_to_win,         SCALE_FIT },
+	{ ControlMask,  XK_Next,          i_fit_to_win,         SCALE_FIT },
 	{ 0,            XK_e,             i_fit_to_win,         SCALE_WIDTH },
-	{ ControlMask,  XK_Prior,             i_fit_to_win,         SCALE_WIDTH },
+	{ ControlMask,  XK_Prior,         i_fit_to_win,         SCALE_WIDTH },
 	{ 0,            XK_E,             i_fit_to_win,         SCALE_HEIGHT },
 	{ 0,            XK_less,          i_rotate,             DEGREE_270 },
 	{ 0,            XK_greater,       i_rotate,             DEGREE_90 },
 	{ 0,            XK_question,      i_rotate,             DEGREE_180 },
 	{ 0,            XK_bar,           i_flip,               FLIP_HORIZONTAL },
 	{ 0,            XK_underscore,    i_flip,               FLIP_VERTICAL },
+	{ ControlMask,  XK_Right,         i_stretch,    	    DIR_RIGHT },
+	{ ControlMask,  XK_Left,          i_stretch,         	DIR_LEFT },
+	{ ControlMask,  XK_Up,            i_stretch,         	DIR_UP },
+	{ ControlMask,  XK_Down,          i_stretch,         	DIR_DOWN },
 	{ 0,            XK_a,             i_toggle_antialias,   None },
 	{ 0,            XK_A,             i_toggle_alpha,       None },
-	{ 0,            XK_s,             i_slideshow,          None },
+	{ ControlMask,  XK_s,             i_slideshow,          None },
 
 	{ ControlMask,  XK_Right,         t_move_img,	        DIR_RIGHT },
 	{ ControlMask,  XK_Left,          t_move_img,   	    DIR_LEFT },
-	{ ControlMask,  XK_Down,          t_move_img,   	    DIR_DOWN },
-	{ ControlMask,  XK_s,             g_dump_files,	        SELECTED }, //1
+//  { ControlMask,  XK_Down,          t_move_img,   	    DIR_DOWN },
+//	{ ControlMask,  XK_s,             g_dump_files,	        SELECTED }, //1
 //	{ ControlMask,  XK_a,             g_dump_files,	        ALL_FILES }, //2
 	{ ControlMask,  XK_a,             g_make_index,	        None },
 	{ ControlMask,  XK_e,             i_set_mode_extractor,	None },
 	{ ControlMask,  XK_t,             i_set_mode_taging,    None },
 	{ ControlMask,  XK_d,             g_del_selected,	    None },
 	{ ControlMask,	XK_Return,        g_edit_tags,		    None },
-	{ 0,            XK_backslash,     g_show_tags,		    None },
+    { 0,            XK_backslash,     g_show_tags,		    None },
 	{ 0,            XK_t,             g_run_cmd,		    1 },
 	{ 0,			XK_Delete,        g_run_cmd,		    2 },
-	{ 0,			XK_o,             g_run_cmd,		    3 },
-	{ 0,			XK_S,             g_run_cmd,		    4 },
-	{ 0,			XK_M,             g_run_cmd,		    5 },
-	{ 0,			XK_i,             g_run_cmd,		    6 },
-	{ 0,			XK_z,             g_run_cmd,		    7 },
+	{ 0,			XK_o,             g_run_cmd,		    3 },  // open
+	{ 0,			XK_F4,            g_run_cmd,		    4 },  // terminal
+	{ 0,			XK_M,             g_run_cmd,		    5 },  // move
+	{ 0,			XK_i,             g_run_cmd,		    6 },  // info
+	{ 0,			XK_z,             g_run_cmd,		    7 },  // xmenu
 };
 
 /* mouse button mappings for image mode: */
