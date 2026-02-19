@@ -31,6 +31,8 @@
 
 #define RES_CLASS "Sxiv"
 
+void show_left_panel_data();
+
 enum {
 	H_TEXT_PAD = 5,
 	V_TEXT_PAD = 1
@@ -313,6 +315,8 @@ bool win_configure(win_t *win, XConfigureEvent *c)
 	win->w = c->width;
 	win->h = c->height - win->bar.h;
 	win->bw = c->border_width;
+    win->top_panel_visable = false;
+    win->left_panel_visable = false;
 
 	return changed;
 }
@@ -429,7 +433,7 @@ void show_top_bar(win_t *win)
 
 void win_show_panel(win_t *win, int x, int y, int width, int height)
 {
-	fprintf(stderr,"mojafunkcja win_show_panel w window.c:427\n");
+	fprintf(stderr,"mojafunkcja win_show_panel w window.c:432\n");
 	win_env_t *e;
 	e = &win->env;
 	XSetForeground(e->dpy, gc, win->gray.pixel);
@@ -454,7 +458,7 @@ void draw_tags(win_t *win, char* tags)
 	e = &win->env;
 	XftDraw *d;
 	int x=40;
-    int y=300;
+    int y=380;
     int j=0;
     char tag[30];   // lets say the longest tag can be 30 characters long
 	fprintf(stderr,"mojafunkcja draw_tags w window.c\n");
@@ -520,7 +524,10 @@ void win_draw(win_t *win)
 {
 	if (win->bar.h > 0)
 		win_draw_bar(win);
-
+    if (win->left_panel_visable == true) {
+        show_left_panel_data();
+        //draw_data(win, "siema", 100, 40);
+    }
 	XSetWindowBackgroundPixmap(win->env.dpy, win->xwin, win->buf.pm);
 	XClearWindow(win->env.dpy, win->xwin);
 	XFlush(win->env.dpy);

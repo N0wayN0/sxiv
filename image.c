@@ -863,6 +863,7 @@ void img_stretch(img_t *img, float xfactor, float yfactor)
 {
     fprintf(stderr, "Stretch image \n");
     fprintf(stderr, "factor X: %f\nfactor Y: %f\n", xfactor, yfactor);
+	//img_zoom(img, 1.0); // set zoom 100%
     Imlib_Image new_img;
     int new_h, new_w;
 
@@ -870,6 +871,7 @@ void img_stretch(img_t *img, float xfactor, float yfactor)
 
     new_w = MAX(1, (int)(img->w * xfactor));
     new_h = MAX(1, (int)(img->h * yfactor));
+		imlib_context_set_anti_alias(1);
     new_img = imlib_create_cropped_scaled_image(0,0, img->w, img->h, new_w, new_h);
     imlib_free_image();
     img->im = new_img;
@@ -880,7 +882,7 @@ void img_stretch(img_t *img, float xfactor, float yfactor)
 	img->w = imlib_image_get_width();
 	img->h = imlib_image_get_height();
 
-	img->scalemode = 0;  // set 100%
+	img->scalemode = 4;     // zoom
 	img->checkpan = true;
 	img->dirty = true;
 

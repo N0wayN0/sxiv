@@ -34,12 +34,14 @@ char *spawnshell = "spawn-shell.sh";
 char *movefiles = "move-file.sh";
 char *fullinfo = "full-info.sh";
 char *menu = "context_menu.sh";
+char *manager = "show_in_file_manager.sh";
 
 // tu sa zadelkarowane funkcje ktore beda uzywane ale sa w innych plikach
 void remove_file(int, bool);
 void move_one_image(int, int);
 void move_img(int);
-void show_left_panel();
+void show_left_panel_data();     // w main.c
+void load_from_file(void);       // main.c
 //void edit_tags(void);
 //void edit_tags(char*);
 void set_color_for_bg(win_t*,const char*);
@@ -85,10 +87,14 @@ bool cg_edit_tags(arg_t _) {
 return true;
 }
 
-bool cg_show_tags(arg_t _) {
-    //read_tags();
-    show_left_panel();
-return true;
+bool cg_toggle_left_panel(arg_t _) {
+    win.left_panel_visable = !win.left_panel_visable;
+	fprintf(stderr, "Left panel:%d\n",win.left_panel_visable);
+    img.checkpan = img.dirty = true;  // required for img_render to works
+    img_render(&img);
+		tns.dirty = true;
+    //win_draw(&win);
+return true;    // always redraw
 }
 
 bool cg_run_cmd(arg_t _) {
@@ -126,6 +132,10 @@ bool cg_run_cmd(arg_t _) {
 			case 7:
 	            fprintf(stderr, "case 7:%d\n",_);
                 run_ext_command_current_file(menu);
+				break;
+			case 8:
+	            fprintf(stderr, "case 8:%d\n",_);
+                run_ext_command_current_file(manager);
 				break;
 	    }
 		tns.dirty = true;
@@ -349,17 +359,24 @@ bool ci_set_mode_taging(arg_t _)
 	return false;
 }
 
+bool cg_memory_load(arg_t _)
+{
+    load_from_file();
+    return true;
+}
+
 bool cg_reload_image(arg_t _)
 {
 	if (mode == MODE_IMAGE) {
 		load_image(fileidx);
 	} else {
 		win_set_cursor(&win, CURSOR_WATCH);
+		tns_init(&tns, files, &filecnt, &fileidx, &win);
 		if (!tns_load(&tns, fileidx, true, false)) {
 			remove_file(fileidx, false);
 			tns.dirty = true;
 		}
-	}
+	} 
 	return true;
 }
 

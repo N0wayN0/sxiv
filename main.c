@@ -81,7 +81,15 @@ const char * GET_TAGS = "get-tags.sh";
 bool resized = false;
 bool top_edge = false;
 bool left_edge = false;
+bool right_edge = false;
 bool bottom_edge = false;
+
+/* for remembered files */
+fileinfo_t *backup;     // current files will be loaded here
+int back_filecnt;
+int back_fileidx;
+bool load = false;      // false required to populate backup first
+int mem_curr = 0;
 
 typedef struct {
 	int err;
@@ -470,14 +478,14 @@ close_info();
     fprintf(stderr, "done: \n");
     argv[x+1] = NULL;
     argv[x+2] = NULL;
-    argv[x+3] = NULL;
+    //argv[x+3] = NULL;
     fprintf(stderr, "done: \n");
 	} else {
         fprintf(stderr, "single file\n");
 	    argv[1] = (char*)files[fileidx].path;
         argv[2] = NULL;
-        argv[3] = NULL;
-        argv[4] = NULL;
+      //  argv[3] = NULL;
+      //  argv[4] = NULL;
     }
 
 	printf("array loaded\n");
@@ -566,9 +574,9 @@ close_info();
 
 void read_tags(void)
 {
-close_info();
 	int pfd[2];
 	int status;
+	pid_t pid;
 	char *cmd = get_path_to_exec(GET_TAGS);
 	//fprintf(stderr,"cmd --> %s\n",cmd);
     if (access(cmd, X_OK) != 0) {
@@ -576,44 +584,36 @@ close_info();
         fprintf(stderr,"exit\n");
         return;
     }
-	info.fd = -1;
-
-		//fprintf(stderr,"wykonauje bo plik cmd isnieje \n");
-		//fprintf(stderr,"test info.fd -->  %d\n",info.fd);
-	fprintf(stderr,"continue\n");
-		//fprintf(stderr, "test  pfd[0] (before) %d\n",pfd[0]); 
-		//fprintf(stderr, "test  pfd[1] (before) %d\n",pfd[1]); 
-		//fprintf(stderr, "test  pfd[2] (before) %d\n",pfd[2]); 
+    fprintf(stderr,"wykonauje bo plik cmd isnieje \n");
+	int fd = -1;
+		
 	if (pipe(pfd) < 0) {
 		//fprintf(stderr,"pipe error cos jest zle koniec\n");
 		return;
 	}
-	if ((info.pid = fork()) == 0) {
+	if ((pid = fork()) == 0) {
 		close(pfd[0]);
 		dup2(pfd[1], 1);
-		//close(pfd[1]);
 		fprintf(stderr,"exec forked cmd -->%s\n",cmd);
 		execl(cmd, cmd, files[fileidx].path, NULL);
 		error(EXIT_FAILURE, errno, "exec: %s", cmd);
 	}
 	close(pfd[1]);
 	wait(&status);
-	if (info.pid < 0) {
+	if (pid < 0) {
 		close(pfd[0]);
 		fprintf(stderr,"test if block\n");
 	} else {
 		fcntl(pfd[0], F_SETFL, O_NONBLOCK);
-		info.fd = pfd[0];
+		fd = pfd[0];
 		fprintf(stderr,"test parent finish\n");
-		info.i = info.lastsep = 0;
 	}
 
 	ssize_t i, n;
-	//char buf[BAR_L_LEN];
 	char buf[2048];
 
 	while (true) {
-		n = read(info.fd, buf, sizeof(buf));
+		n = read(fd, buf, sizeof(buf));
         //fprintf(stderr,"Size of buf N=%d\n",n);
 		//fprintf(stderr,"Readed %d bytes from info.fd -> %d\n", n, info.fd);
 		//fprintf(stderr,"Raw: %s\n",buf);
@@ -641,9 +641,13 @@ end:
     }
 	fprintf(stderr,"\nbuf now: %s\n",buf);
     draw_tags(&win, &buf);  // wyswietla tagi
-	win_draw(&win);
+	//win_draw(&win);
     fprintf(stderr,"koniec tagow\n");
-	close_info();
+	if (fd != -1) {
+		kill(pid, SIGTERM);
+		close(fd);
+		fd = -1;
+    }
 }
 
 void open_info(void)
@@ -752,12 +756,13 @@ int find_target_index()
     return idx;
 }
 
-
-int sort_by_index(const void *a, const void *b)
+int sort_by_ctime(const void *a, const void *b)
 {
-	fileinfo_t *fa = (fileinfo_t *)a;
-	fileinfo_t *fb = (fileinfo_t *)b;
-    return fa->fromindex - fb->fromindex;
+    fileinfo_t *fa = (fileinfo_t *)a;
+    fileinfo_t *fb = (fileinfo_t *)b;
+    if (fa->ctime < fb->ctime) return -1;
+    if (fa->ctime > fb->ctime) return 1;
+    return 0;
 }
 
 int sort_by_size(const void *a, const void *b)
@@ -767,6 +772,13 @@ int sort_by_size(const void *a, const void *b)
     if (fb->size > fa->size) return -1;
     if (fb->size < fa->size) return 1;
     return 0;
+}
+
+int sort_by_index(const void *a, const void *b)
+{
+	fileinfo_t *fa = (fileinfo_t *)a;
+	fileinfo_t *fb = (fileinfo_t *)b;
+    return fa->fromindex - fb->fromindex;
 }
 
 void load_index_file(void)
@@ -804,6 +816,81 @@ void load_index_file(void)
 	//qsort(files, filecnt, sizeof(fileinfo_t), sort_by_size);
 }
 
+void load_from_file(void)
+{
+    load = !load;
+    if (load) {
+        // create fuul path to file
+        int len;
+        const char *homedir = getenv("HOME");
+        const char *dir = "/tmp/";
+        const char *mem_file = "remembered.txt";
+        char fullpath[256];
+        
+        if (homedir != NULL) {
+            len = strlen(homedir) + strlen(dir) + strlen(mem_file) + 1;
+            snprintf(fullpath, len, "%s%s%s", homedir, dir, mem_file);
+            fprintf(stderr,"Memory file: %s\n", fullpath);
+
+			if (access(fullpath, R_OK) != 0) {
+                fprintf(stderr,"Memory file error: %s\n", fullpath);
+                error(0, 0, "Memory file not found");
+                return;
+            } 
+            
+        }
+        fprintf(stderr,"Memory file OK: %s\n", fullpath);
+        //FILE *file = fopen("/tmp/remembered.txt", "r");
+        FILE *file = fopen(fullpath, "r");
+        if (!file) {
+            perror("error with remembered.txt");
+            return;
+        }
+        back_filecnt = filecnt;
+        back_fileidx = fileidx;
+        // initialize cleared backup memory
+        backup = emalloc(filecnt * sizeof(*files));
+        memset(backup, 0, filecnt * sizeof(*files));
+
+        // copy data to backup
+        for (int i = 0; i <filecnt; i++) {
+            backup[i] = files[i];
+            backup[i].path = strdup(files[i].path);
+            backup[i].name = strdup(files[i].name);
+        }
+        
+        char line[256];
+        files = emalloc(filecnt * sizeof(*files));
+        memset(files, 0, filecnt * sizeof(*files));
+        fileidx = 0;    // this is needed before creating
+        filecnt = 1;    // new files struct
+        while (fgets(line, sizeof(line), file)) {
+            line[strcspn(line, "\n")] = 0x00;       //strscpn returns (int) index of given char
+            check_add_file(line,false);
+        }
+        fclose(file);
+        filecnt = fileidx;
+        load_image(mem_curr);
+    } else { 
+        mem_curr = fileidx;
+        filecnt = back_filecnt;
+        fileidx = back_fileidx;
+        files = emalloc(filecnt * sizeof(*files));
+        memset(files, 0, filecnt * sizeof(*files));
+
+        // copy data to files
+        for (int i = 0; i <filecnt; i++) {
+            files[i] = backup[i];
+            files[i].path = strdup(backup[i].path);
+            files[i].name = strdup(backup[i].name);
+
+        }
+        load_image(fileidx);
+    }
+    tns_init(&tns, files, &filecnt, &fileidx, &win);
+
+}
+
 void show_top_panel()
 {
     char buff[80];
@@ -826,35 +913,33 @@ void show_top_panel()
     win_draw(&win);
 
 }
-void show_left_panel()
+void show_left_panel_data()
 {
-    char buff[80];
+    char buff[4096];
     int y_coor = 100;
     int x_coor = 40;
     int gap = 25;
-    //fprintf(stderr,"C_Time: %s",ctime(&files[fileidx].ctime));
-    //fprintf(stderr,"M_Time: %s",ctime(&files[fileidx].mtime));
-    //fprintf(stderr,"Size: %ld\n",(long)files[fileidx].size);
-    //fprintf(stderr,"As Loaded: %d\n",files[fileidx].asloaded);
     win_show_panel(&win, 0, 0, 500, win.h);
     snprintf(buff, sizeof(buff), "path  %s",files[fileidx].path);
     draw_data(&win, buff, x_coor, y_coor);
     snprintf(buff, sizeof(buff), "name  %s",files[fileidx].name);
     draw_data(&win, buff, x_coor, y_coor += gap);
-    snprintf(buff, sizeof(buff), "cTime  %s", ctime(&files[fileidx].ctime));
+    snprintf(buff, sizeof(buff), "cTime: %s", ctime(&files[fileidx].ctime));
     draw_data(&win, buff, x_coor, y_coor += gap);
-    snprintf(buff, sizeof(buff), "mTime  %s", ctime(&files[fileidx].mtime));
+    snprintf(buff, sizeof(buff), "mTime: %s", ctime(&files[fileidx].mtime));
     draw_data(&win, buff, x_coor, y_coor += gap);
-    snprintf(buff, sizeof(buff), "size  %ld",files[fileidx].size);
+    snprintf(buff, sizeof(buff), "Width: %d",imlib_image_get_width());
     draw_data(&win, buff, x_coor, y_coor += gap);
-    snprintf(buff, sizeof(buff), "Loaded  %d",files[fileidx].asloaded);
+    snprintf(buff, sizeof(buff), "Height:  %d",imlib_image_get_height());
     draw_data(&win, buff, x_coor, y_coor += gap);
-    snprintf(buff, sizeof(buff), "index  %d",files[fileidx].fromindex);
+    snprintf(buff, sizeof(buff), "size:  %ld",files[fileidx].size);
+    draw_data(&win, buff, x_coor, y_coor += gap);
+    snprintf(buff, sizeof(buff), "Loaded as: %d",files[fileidx].asloaded);
+    draw_data(&win, buff, x_coor, y_coor += gap);
+    snprintf(buff, sizeof(buff), "index:  %d",files[fileidx].fromindex);
     draw_data(&win, buff, x_coor, y_coor += gap);
     
     read_tags();
-
-    win_draw(&win);
 }
 
 void load_image(int new)
@@ -1008,17 +1093,18 @@ void cursor_track()
 	//	fprintf(stderr,"xxxx ooodddppppaaallllaa  xxxx\n"); 
 	//	read_tags();
 	//}
-	if ((x > 500) && (left_edge == true)) {  // jest z lewej
+	if ((x > 500) && (win.left_panel_visable == true)) {  // jest z lewej
 		fprintf(stderr,"left panel set zero\n"); 
-		img.checkpan = img.dirty = true;  // potrzebne zeby img_render zadzialalo
+        win.left_panel_visable = false;
+        img.checkpan = img.dirty = true;  // required for img_render to works
 		img_render(&img);
+		tns.dirty = true;
 		win_draw(&win);
-		left_edge = false;
 	}
-	if ((x < 45) && (left_edge == false)) {  // jest z lewej
+	if ((x < 45) && (win.left_panel_visable == false)) {  // jest z lewej
 		fprintf(stderr,"odpala left panel\n"); 
-        show_left_panel();        
-		left_edge = true;
+        win.left_panel_visable = true;
+		win_draw(&win);
 	}
 	if ((top_edge == true ) && ( x > win.w-10 ) && (x < win.w )) {  // jest na napisie
 		fprintf(stderr,"odpalaa exit bo jest myszka w rogu\n"); 
@@ -1496,14 +1582,6 @@ void run(void)
 		}
 	}
 }
-
-//int cmp_ctime(const void *a, const void *b)
-//{
-//    const struct fileinfo_t *fa = (const fileinfo_t *)a;
-//    const struct fileinfo_t *fb = (const fileinfo_t *)b;
-//    if (fa->ctime < fb->ctime) return -1;
-//    if (fa->ctime > fb->ctime) return 0;
-//}
 
 int fncmp(const void *a, const void *b)
 {

@@ -81,7 +81,7 @@ static const keymap_t keys[] = {
 	//{ 0,            XK_g,             g_first,              None },
 	//{ 0,            XK_G,             g_n_or_last,          None },
 	{ 0,            XK_End,             g_n_or_last,          None },
-	{ 0,            XK_r,             g_reload_image,       None },
+	{ 0,            XK_F5,            g_reload_image,       None },
 	{ 0,            XK_D,             g_remove_image,       None },
 	{ ControlMask,  XK_h,             g_scroll_screen,      DIR_LEFT },
 	{ ControlMask,  XK_Left,          g_scroll_screen,      DIR_LEFT },
@@ -169,11 +169,12 @@ static const keymap_t keys[] = {
 //	{ ControlMask,  XK_s,             g_dump_files,	        SELECTED }, //1
 //	{ ControlMask,  XK_a,             g_dump_files,	        ALL_FILES }, //2
 	{ ControlMask,  XK_a,             g_make_index,	        None },
+	{ 0,            XK_r,             g_memory_load,        None },
 	{ ControlMask,  XK_e,             i_set_mode_extractor,	None },
 	{ ControlMask,  XK_t,             i_set_mode_taging,    None },
 	{ ControlMask,  XK_d,             g_del_selected,	    None },
 	{ ControlMask,	XK_Return,        g_edit_tags,		    None },
-    { 0,            XK_backslash,     g_show_tags,		    None },
+    { 0,            XK_backslash,     g_toggle_left_panel,  None },
 	{ 0,            XK_t,             g_run_cmd,		    1 },
 	{ 0,			XK_Delete,        g_run_cmd,		    2 },
 	{ 0,			XK_o,             g_run_cmd,		    3 },  // open
@@ -181,6 +182,7 @@ static const keymap_t keys[] = {
 	{ 0,			XK_M,             g_run_cmd,		    5 },  // move
 	{ 0,			XK_i,             g_run_cmd,		    6 },  // info
 	{ 0,			XK_z,             g_run_cmd,		    7 },  // xmenu
+	{ 0,			XK_F3,            g_run_cmd,		    8 },  // locate in pcmanfm
 };
 
 /* mouse button mappings for image mode: */
