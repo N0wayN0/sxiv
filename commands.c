@@ -92,8 +92,7 @@ bool cg_toggle_left_panel(arg_t _) {
 	fprintf(stderr, "Left panel:%d\n",win.left_panel_visable);
     img.checkpan = img.dirty = true;  // required for img_render to works
     img_render(&img);
-		tns.dirty = true;
-    //win_draw(&win);
+	tns.dirty = true;
 return true;    // always redraw
 }
 
@@ -182,6 +181,19 @@ bool cg_make_index(arg_t _)
     for (i = 0; i < filecnt; i++) {
         //printf("%s\n", files[i].name);
         fprintf(fh, "%s\n", files[i].name);
+    }
+	fclose(fh);
+
+
+	//*filename = "script.sh";
+	fh=fopen("script.sh", "w");
+	if (fh == NULL) {
+		fprintf(stderr, "%s : couldn't open.", filename);
+		return -1;
+	}
+    for (i = 0; i < filecnt; i++) {
+        //printf("%s\n", files[i].name);
+        fprintf(fh, "mv %s %03d_%s\n", files[i].name, i,files[i].name + 2 );
     }
 	fclose(fh);
 
@@ -359,9 +371,11 @@ bool ci_set_mode_taging(arg_t _)
 	return false;
 }
 
-bool cg_memory_load(arg_t _)
+bool cg_toggle_source(arg_t _)
 {
     load_from_file();
+    tns_init(&tns, files, &filecnt, &fileidx, &win);
+    tns.dirty = true;
     return true;
 }
 

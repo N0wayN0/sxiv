@@ -200,6 +200,23 @@ typedef struct {
 
 extern const cmd_t cmds[CMD_COUNT];
 
+typedef void (*ButtonAction)(void);
+
+typedef enum {
+    NORMAL,
+    HOOVER,
+    PRESS,
+} ButtonState;
+
+typedef struct {
+	char *label;
+    int x;
+	int y;
+    int width;
+    int height;
+    ButtonState state;
+    ButtonAction cmd;
+} vbutton_t;
 
 /* image.c */
 
@@ -229,6 +246,8 @@ struct img {
 
 	scalemode_t scalemode;
 	float zoom;
+    float x_stretch;
+    float y_stretch;
 
 	bool checkpan;
 	bool dirty;
@@ -306,6 +325,7 @@ void print_usage(void);
 void print_version(void);
 void parse_options(int, char**);
 
+void remember_file(void);
 
 /* thumbs.c */
 
@@ -430,6 +450,7 @@ struct win {
 	XftColor yellow;
 	XftColor orange;
 	XftColor gray;
+	XftColor black;
 
 	int x;
 	int y;

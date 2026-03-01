@@ -64,6 +64,8 @@ void img_init(img_t *img, win_t *win)
 	img->zoom = options->zoom;
 	img->zoom = MAX(img->zoom, zoom_min);
 	img->zoom = MIN(img->zoom, zoom_max);
+    img->x_stretch = 1.0;
+    img->y_stretch = 1.0;
 	img->checkpan = false;
 	img->dirty = false;
 	img->aa = ANTI_ALIAS;
@@ -868,10 +870,18 @@ void img_stretch(img_t *img, float xfactor, float yfactor)
     int new_h, new_w;
 
 	imlib_context_set_image(img->im);
+    //img->dirty = true;
+    //img_render(img);
+
+      //  img->x_stretch += xfactor;
+       // img->y_stretch += yfactor;
+    fprintf(stderr, "stretch X: %f\nstretch Y: %f\n", img->x_stretch, img->y_stretch);
 
     new_w = MAX(1, (int)(img->w * xfactor));
     new_h = MAX(1, (int)(img->h * yfactor));
-		imlib_context_set_anti_alias(1);
+    //new_w = MAX(1, (int)(img->w * img->x_stretch));
+    //new_h = MAX(1, (int)(img->h * img->y_stretch));
+	imlib_context_set_anti_alias(1);
     new_img = imlib_create_cropped_scaled_image(0,0, img->w, img->h, new_w, new_h);
     imlib_free_image();
     img->im = new_img;

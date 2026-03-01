@@ -53,9 +53,10 @@ void clear_resize(void);
 
 void cg_quit(void);     // dodalem bo ja tutaj uzywam a ona jest w commands.c
 void show_top_bar();    // ona jest w window.c
-void draw_tags();       // jest w window.c
+void win_draw_tags();       // jest w window.c
 void win_show_panel();  // jest w window.c
-void draw_data();       // jest w window.c
+void win_draw_data();       // jest w window.c
+void win_draw_button();
 //void cg_unmark_all();
 
 appmode_t mode;
@@ -584,65 +585,46 @@ void read_tags(void)
         fprintf(stderr,"exit\n");
         return;
     }
-    fprintf(stderr,"wykonauje bo plik cmd isnieje \n");
 	int fd = -1;
 		
 	if (pipe(pfd) < 0) {
-		//fprintf(stderr,"pipe error cos jest zle koniec\n");
 		return;
 	}
 	if ((pid = fork()) == 0) {
 		close(pfd[0]);
 		dup2(pfd[1], 1);
-		fprintf(stderr,"exec forked cmd -->%s\n",cmd);
+		//fprintf(stderr,"exec child cmd -->%s\n",cmd);
 		execl(cmd, cmd, files[fileidx].path, NULL);
 		error(EXIT_FAILURE, errno, "exec: %s", cmd);
 	}
 	close(pfd[1]);
 	wait(&status);
-	if (pid < 0) {
-		close(pfd[0]);
-		fprintf(stderr,"test if block\n");
-	} else {
-		fcntl(pfd[0], F_SETFL, O_NONBLOCK);
-		fd = pfd[0];
-		fprintf(stderr,"test parent finish\n");
-	}
+	fd = pfd[0];
+	//fprintf(stderr,"parent continue\n");
 
 	ssize_t i, n;
 	char buf[2048];
 
-	while (true) {
-		n = read(fd, buf, sizeof(buf));
-        //fprintf(stderr,"Size of buf N=%d\n",n);
-		//fprintf(stderr,"Readed %d bytes from info.fd -> %d\n", n, info.fd);
-		//fprintf(stderr,"Raw: %s\n",buf);
-		if (n < 0 && errno == EAGAIN) {
-			fprintf(stderr,"koniec. N<0\n");
-			return;
-		}
-		else if (n == 0)
-			goto end;
-		//fprintf(stderr,"moj wykonuke --> %d\n",n);
-		for (i = 0; i < n; i++) {
-            //fprintf(stderr,"%02x ",buf[i]);
-			//fprintf(stderr,"buf[%d] -> %02x %c\n",i, buf[i], buf[i]);
-			if ((buf[i] == 0x0a) || (buf[i] == '\n')) {
-			    fprintf(stderr,"Got new line character\n");
-	            fprintf(stderr,"Added NULL to string\n");
-			    buf[i] = 0x00;  // indicate end of string
-			    goto end;
-            }
-		}
-	}
-end:
+    n = read(fd, buf, sizeof(buf));
+    //fprintf(stderr,"Readed %d bytes to buf\n",n);
+    //fprintf(stderr,"Raw: %s\n",buf);
+    if ((n < 0 && errno == EAGAIN) || (n == 0)) {
+        //fprintf(stderr,"finish. no data\n");
+        return;
+    }
+    for (i = 0; i < n; i++) {
+        //fprintf(stderr,"%02x ",buf[i]);
+        //fprintf(stderr,"buf[%d] -> %02x %c\n",i, buf[i], buf[i]);
+        if ((buf[i] == 0x0a) || (buf[i] == '\n')) {
+            //fprintf(stderr,"\nGot new line character\n");
+            buf[i] = 0x00;  // indicate end of string
+        }
+    }
 	for (i = 0; i < n; i++) {
         fprintf(stderr,"%02x ",buf[i]);
     }
 	fprintf(stderr,"\nbuf now: %s\n",buf);
-    draw_tags(&win, &buf);  // wyswietla tagi
-	//win_draw(&win);
-    fprintf(stderr,"koniec tagow\n");
+    win_draw_tags(&win, &buf);  // wyswietla tagi
 	if (fd != -1) {
 		kill(pid, SIGTERM);
 		close(fd);
@@ -820,32 +802,35 @@ void load_from_file(void)
 {
     load = !load;
     if (load) {
-        // create fuul path to file
-        int len;
         const char *homedir = getenv("HOME");
+        if (homedir == NULL)
+            return;
+
+        // create full path to file
+        int len;
         const char *dir = "/tmp/";
         const char *mem_file = "remembered.txt";
         char fullpath[256];
         
-        if (homedir != NULL) {
-            len = strlen(homedir) + strlen(dir) + strlen(mem_file) + 1;
-            snprintf(fullpath, len, "%s%s%s", homedir, dir, mem_file);
-            fprintf(stderr,"Memory file: %s\n", fullpath);
+        len = strlen(homedir) + strlen(dir) + strlen(mem_file) + 1;
+        snprintf(fullpath, len, "%s%s%s", homedir, dir, mem_file);
+        //fprintf(stderr,"Memory file: %s\n", fullpath);
 
-			if (access(fullpath, R_OK) != 0) {
-                fprintf(stderr,"Memory file error: %s\n", fullpath);
-                error(0, 0, "Memory file not found");
-                return;
-            } 
+        if (access(fullpath, R_OK) != 0) {
+            fprintf(stderr,"Memory file error: %s\n", fullpath);
+            error(0, 0, "Memory file not found");
+            return;
+        } 
             
-        }
+        
         fprintf(stderr,"Memory file OK: %s\n", fullpath);
         //FILE *file = fopen("/tmp/remembered.txt", "r");
         FILE *file = fopen(fullpath, "r");
         if (!file) {
-            perror("error with remembered.txt");
+            perror("error with memory file");
             return;
         }
+        fprintf(stderr,"Load files from memory file\n");
         back_filecnt = filecnt;
         back_fileidx = fileidx;
         // initialize cleared backup memory
@@ -871,7 +856,9 @@ void load_from_file(void)
         fclose(file);
         filecnt = fileidx;
         load_image(mem_curr);
-    } else { 
+        setenv("SXIV_TITLE", "Remember files", 1);
+    } else if (backup){ 
+        fprintf(stderr,"Load original files\n");
         mem_curr = fileidx;
         filecnt = back_filecnt;
         fileidx = back_fileidx;
@@ -886,9 +873,8 @@ void load_from_file(void)
 
         }
         load_image(fileidx);
+        setenv("SXIV_TITLE", "cll", 1);
     }
-    tns_init(&tns, files, &filecnt, &fileidx, &win);
-
 }
 
 void show_top_panel()
@@ -905,41 +891,78 @@ void show_top_panel()
     }
 
     snprintf(buff, sizeof(buff), "Collection: %s",title);
-    draw_data(&win, buff, x_coor, y_coor);
+    win_draw_data(&win, buff, x_coor, y_coor);
     snprintf(buff, sizeof(buff), "Files: %d",filecnt);
-    draw_data(&win, buff, x_coor, y_coor += gap);
+    win_draw_data(&win, buff, x_coor, y_coor += gap);
     
 
     win_draw(&win);
 
 }
+
+void remember_file(void)
+{
+        fprintf(stderr,"Remember this file\n");
+        const char *homedir = getenv("HOME");
+        if (homedir == NULL)
+            return;
+
+        // create full path to file
+        int len;
+        const char *dir = "/tmp/";
+        const char *mem_file = "remembered.txt";
+        char fullpath[256];
+        
+        len = strlen(homedir) + strlen(dir) + strlen(mem_file) + 1;
+        snprintf(fullpath, len, "%s%s%s", homedir, dir, mem_file);
+        //fprintf(stderr,"Memory file: %s\n", fullpath);
+
+        int fd = open(fullpath, O_WRONLY | O_CREAT | O_APPEND, 0644);
+
+        if (fd == -1) {
+            perror("error opening remem");
+            return;
+        }
+        
+        write(fd, files[fileidx].path, strlen(files[fileidx].path));
+        write(fd, "\n", 1);
+        close(fd);
+}
+
 void show_left_panel_data()
 {
     char buff[4096];
     int y_coor = 100;
     int x_coor = 40;
     int gap = 25;
+	//	unsigned long col = win->bg.pixel;
     win_show_panel(&win, 0, 0, 500, win.h);
+		//win_draw_rect(&win, 0, 0, 500, win.h, true, 6, &win.red.pixel);
+		//win_draw_rect(&win, 0, 0, 500, win.h, false, 6, &win.yellow.pixel);
     snprintf(buff, sizeof(buff), "path  %s",files[fileidx].path);
-    draw_data(&win, buff, x_coor, y_coor);
+    win_draw_data(&win, buff, x_coor, y_coor);
     snprintf(buff, sizeof(buff), "name  %s",files[fileidx].name);
-    draw_data(&win, buff, x_coor, y_coor += gap);
+    win_draw_data(&win, buff, x_coor, y_coor += gap);
     snprintf(buff, sizeof(buff), "cTime: %s", ctime(&files[fileidx].ctime));
-    draw_data(&win, buff, x_coor, y_coor += gap);
+    win_draw_data(&win, buff, x_coor, y_coor += gap);
     snprintf(buff, sizeof(buff), "mTime: %s", ctime(&files[fileidx].mtime));
-    draw_data(&win, buff, x_coor, y_coor += gap);
+    win_draw_data(&win, buff, x_coor, y_coor += gap);
     snprintf(buff, sizeof(buff), "Width: %d",imlib_image_get_width());
-    draw_data(&win, buff, x_coor, y_coor += gap);
+    win_draw_data(&win, buff, x_coor, y_coor += gap);
     snprintf(buff, sizeof(buff), "Height:  %d",imlib_image_get_height());
-    draw_data(&win, buff, x_coor, y_coor += gap);
+    win_draw_data(&win, buff, x_coor, y_coor += gap);
     snprintf(buff, sizeof(buff), "size:  %ld",files[fileidx].size);
-    draw_data(&win, buff, x_coor, y_coor += gap);
+    win_draw_data(&win, buff, x_coor, y_coor += gap);
     snprintf(buff, sizeof(buff), "Loaded as: %d",files[fileidx].asloaded);
-    draw_data(&win, buff, x_coor, y_coor += gap);
+    win_draw_data(&win, buff, x_coor, y_coor += gap);
     snprintf(buff, sizeof(buff), "index:  %d",files[fileidx].fromindex);
-    draw_data(&win, buff, x_coor, y_coor += gap);
+    win_draw_data(&win, buff, x_coor, y_coor += gap);
     
     read_tags();
+	
+    for (int i = 0; i < ARRLEN(lpb); i++) {
+        win_draw_button(&win, &lpb[i]);
+    }
 }
 
 void load_image(int new)
@@ -1046,6 +1069,62 @@ void update_info(void)
 	}
 }
 
+void check_panels(XEvent *ev)
+{
+    //fprintf(stderr,"check panels\n"); 
+	if (win.left_panel_visable) {
+        int x;
+        int y;
+        switch (ev->type) {
+            case ButtonPress:
+                fprintf(stderr,"button press\n"); 
+                x = ev->xbutton.x;
+                y = ev->xbutton.y;
+                break;
+            case ButtonRelease:
+                fprintf(stderr,"button release\n"); 
+                x = ev->xbutton.x;
+                y = ev->xbutton.y;
+                break;
+            case  MotionNotify:
+                //fprintf(stderr,"motion\n"); 
+                x = ev->xmotion.x;
+                y = ev->xmotion.y;
+                break;
+        }
+        
+        for (int i = 0; i < ARRLEN(lpb); i++) {
+            bool inside = (x > lpb[i].x && x < lpb[i].x + lpb[i].width &&
+                y > lpb[i].y && y < lpb[i].y + lpb[i].height);
+
+            if (inside) {
+                if (lpb[i].state == NORMAL) {  // == NORMAL
+                    fprintf(stderr,"set %s to hoover\n", lpb[i].label); 
+                    lpb[i].state = HOOVER;
+                    win_draw_button(&win, &lpb[i]);
+                    win_draw(&win);
+                } else if (ev->type == ButtonPress) {
+                    lpb[i].state = PRESS;
+                    win_draw_button(&win, &lpb[i]);
+                    win_draw(&win);
+                } else if (ev->type == ButtonRelease && lpb[i].state == PRESS) {
+                    lpb[i].state = HOOVER;
+                    win_draw_button(&win, &lpb[i]);
+                    lpb[i].cmd();
+                    win_draw(&win);
+                }
+            // outside
+            } else if (lpb[i].state != NORMAL) {
+                lpb[i].state = NORMAL;
+                //fprintf(stderr,"set %s to normal\n", lpb[i].label); 
+                win_draw_button(&win, &lpb[i]);
+                win_draw(&win);
+            }
+        } // ARRLEN lpb
+
+    }
+}
+
 void cursor_track()
 {
 //read_tags();
@@ -1106,6 +1185,7 @@ void cursor_track()
         win.left_panel_visable = true;
 		win_draw(&win);
 	}
+
 	if ((top_edge == true ) && ( x > win.w-10 ) && (x < win.w )) {  // jest na napisie
 		fprintf(stderr,"odpalaa exit bo jest myszka w rogu\n"); 
         cg_quit();
@@ -1547,7 +1627,11 @@ void run(void)
 		switch (ev.type) {
 			/* handle events */
 			case ButtonPress:
-				on_buttonpress(&ev.xbutton);
+				on_buttonpress(&ev.xbutton); 
+                check_panels(&ev);
+				break;
+		    case ButtonRelease:
+                check_panels(&ev);
 				break;
 			case ClientMessage:
 				if ((Atom) ev.xclient.data.l[0] == atoms[ATOM_WM_DELETE_WINDOW])
@@ -1577,6 +1661,7 @@ void run(void)
 				if (mode == MODE_IMAGE) {
 					set_timeout(reset_cursor, TO_CURSOR_HIDE, true);
 					reset_cursor();
+                    check_panels(&ev);
 				}
 				break;
 		}

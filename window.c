@@ -131,12 +131,13 @@ void win_init(win_t *win)
 	//bg = win_res(db, RES_CLASS ".background", "black");		/* background and font color on bottom bar */
 	//fg = win_res(db, RES_CLASS ".foreground", "#7d7d80");	/* color of bottom bar */
 	//red = win_res(db, RES_CLASS ".czerwonyKolor","#ff0000");	/* color red */
-	win_alloc_color(e, MARK_COLOR,   &win->markcol);
-	win_alloc_color(e, SEL_COLOR,   &win->selcol);
-	win_alloc_color(e, BG_COLOR,   &win->bg);
-	win_alloc_color(e, BAR_COLOR,   &win->fg);
 	//win_alloc_color(e, bg, &win->bg);
 	//win_alloc_color(e, fg, &win->fg);
+	win_alloc_color(e, MARK_COLOR, &win->markcol);
+	win_alloc_color(e, SEL_COLOR, &win->selcol);
+	win_alloc_color(e, BLACK, &win->bg);
+	win_alloc_color(e, BLACK, &win->black);
+	win_alloc_color(e, BAR_COLOR, &win->fg);
 	win_alloc_color(e, RED, &win->red);
 	win_alloc_color(e, GREEN, &win->green);
 	win_alloc_color(e, BLUE, &win->blue);
@@ -421,7 +422,6 @@ void show_top_bar(win_t *win)
 	XFillRectangle(win->env.dpy, win->buf.pm, gc, 0, 0, win->w, 25);
 
 	XSetForeground(e->dpy, gc, win->red.pixel);
-	XSetForeground(e->dpy, gc, win->red.pixel);
 	char* napis = "czerwony napis";
 	w -= 2 * H_TEXT_PAD; /* gap between left and right parts */
 	d = XftDrawCreate(e->dpy, win->buf.pm, DefaultVisual(e->dpy, e->scr), DefaultColormap(e->dpy, e->scr));
@@ -440,7 +440,7 @@ void win_show_panel(win_t *win, int x, int y, int width, int height)
 	XFillRectangle(win->env.dpy, win->buf.pm, gc, x, y, width, height);
 }
 
-void draw_data(win_t *win, char* data, int x, int y)
+void win_draw_data(win_t *win, char* data, int x, int y)
 {
 	win_env_t *e;
 	e = &win->env;
@@ -448,11 +448,11 @@ void draw_data(win_t *win, char* data, int x, int y)
 	//int x=40;
     //int y=150;
     d = XftDrawCreate(e->dpy, win->buf.pm, DefaultVisual(e->dpy, e->scr), DefaultColormap(e->dpy, e->scr));
-    win_draw_text(win, d, &win->red, x, y, data, strlen(data), 1200);
+    win_draw_text(win, d, &win->black, x, y, data, strlen(data), 1200);
 
 }
 
-void draw_tags(win_t *win, char* tags)
+void win_draw_tags(win_t *win, char* tags)
 {
 	win_env_t *e;
 	e = &win->env;
@@ -461,7 +461,6 @@ void draw_tags(win_t *win, char* tags)
     int y=380;
     int j=0;
     char tag[30];   // lets say the longest tag can be 30 characters long
-	fprintf(stderr,"mojafunkcja draw_tags w window.c\n");
 
     //fprintf(stderr,"size of tags=%d\n",strlen(tags));
     //fprintf(stderr,"tags=%s\n",tags);
@@ -472,8 +471,7 @@ void draw_tags(win_t *win, char* tags)
             tag[j]= 0x00;   // trerminate string
             j=-1;
             y+=20;
-            fprintf(stderr,"Display tag=%s\n",tag);
-	        XFillRectangle(win->env.dpy, win->buf.pm, gc, x-17, y-17, 300, 23);
+            //fprintf(stderr,"Display tag=%s\n",tag);
             d = XftDrawCreate(e->dpy, win->buf.pm, DefaultVisual(e->dpy, e->scr), DefaultColormap(e->dpy, e->scr));
             win_draw_text(win, d, &win->red, x, y, tag, strlen(tag), 200);
         }
@@ -520,13 +518,38 @@ void win_draw_bar(win_t *win)
 	XftDrawDestroy(d);
 }
 
+void win_draw_button(win_t *win, vbutton_t *btn)
+{
+    unsigned long border = win->bg.pixel;
+	unsigned long blank = win->gray.pixel;
+	unsigned long red = win->red.pixel;
+    //btn->state = HOOVER;
+	//fprintf(stderr,"Drawing %s state: %d\n",btn->label, btn->state);
+	//switch (btn->state) {
+	//			case HOOVER:
+	//			case PRESS:
+	//			case NORMAL:
+    win_draw_rect(win, btn->x, btn->y, btn->width, btn->height, true, 3, blank);
+    if (btn->state == HOOVER) {
+        win_draw_rect(win, btn->x, btn->y, btn->width, btn->height, false, 4, border);
+        win_draw_rect(win, btn->x, btn->y, btn->width, btn->height, true, 6, 0xa8a8a8);
+    } else if (btn->state == PRESS) {
+        win_draw_rect(win, btn->x, btn->y, btn->width, btn->height, true, 6, red);
+    } else { // NORMAL
+        win_draw_rect(win, btn->x, btn->y, btn->width, btn->height, false, 2, border);
+    }
+    win_draw_data(win, btn->label, btn->x + 5, btn->y + 20);
+
+
+}
+
 void win_draw(win_t *win)
 {
 	if (win->bar.h > 0)
 		win_draw_bar(win);
     if (win->left_panel_visable == true) {
         show_left_panel_data();
-        //draw_data(win, "siema", 100, 40);
+        //win_draw_data(win, "siema", 100, 40);
     }
 	XSetWindowBackgroundPixmap(win->env.dpy, win->xwin, win->buf.pm);
 	XClearWindow(win->env.dpy, win->xwin);

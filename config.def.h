@@ -12,7 +12,7 @@ enum {
  */
 static const char * const MARK_COLOR = "#FF0000";
 static const char * const SEL_COLOR = "#00FF00";
-static const char * const BG_COLOR = "#000000";
+static const char * const BLACK = "#000000";
 static const char * const BAR_COLOR = "#7d7d80";
 static const char * const RED = "#FF0000";
 static const char * const GREEN = "#00FF00";
@@ -169,7 +169,7 @@ static const keymap_t keys[] = {
 //	{ ControlMask,  XK_s,             g_dump_files,	        SELECTED }, //1
 //	{ ControlMask,  XK_a,             g_dump_files,	        ALL_FILES }, //2
 	{ ControlMask,  XK_a,             g_make_index,	        None },
-	{ 0,            XK_r,             g_memory_load,        None },
+	{ 0,            XK_r,             g_toggle_source,      None },
 	{ ControlMask,  XK_e,             i_set_mode_extractor,	None },
 	{ ControlMask,  XK_t,             i_set_mode_taging,    None },
 	{ ControlMask,  XK_d,             g_del_selected,	    None },
@@ -202,4 +202,10 @@ static const button_t buttons[] = {
 	{ 0,            3,                g_run_cmd,            7 },                /* show context menu */
 };
 
+static vbutton_t lpb[] = {
+	/* label        x           y      width       height   state       cmd */
+	{ "remember",   40,        900,    200,        30,      NORMAL,     remember_file },
+	{ "remove",     40,        950,    200,        30,      NORMAL,     remember_file },
+	{ "delete",     40,        1000,    200,        30,     NORMAL,     g_edit_tags },
+};
 #endif
